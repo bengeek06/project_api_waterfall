@@ -23,6 +23,7 @@ def app():
     This fixture sets up the application context, initializes the database,
     and ensures that the database is created before tests run and dropped after tests complete.
     """
+    # Use string import to delay loading config until after .env.test is loaded
     app = create_app("app.config.TestingConfig")
     with app.app_context():
         db.create_all()

@@ -39,6 +39,29 @@ info:
     ## Authentication
     All endpoints (except /health) require JWT authentication via HTTP-only cookies.
     
+    ## Security Model
+    
+    ### Authority of Sources
+    All creation endpoints (`POST`) follow the **Authority of Sources** security principle:
+    
+    **Authoritative Sources:**
+    - **JWT Token**: Provides `company_id` and `user_id` (authenticated user)
+    - **URL Parameters**: Provides `project_id`, `milestone_id`, etc. (resource hierarchy)
+    
+    **Security Enforcement:**
+    1. Critical fields (`company_id`, `created_by`, `project_id`) are extracted from authoritative sources
+    2. Values are injected into the request data **before** validation
+    3. If a client attempts to override these values:
+       - A security warning is logged (includes user_id and attempted values)
+       - Client values are **IGNORED**
+       - Authoritative values are **ALWAYS** used
+    
+    **Benefits:**
+    - ✅ **Prevents privilege escalation**: Users cannot access other companies' data
+    - ✅ **Audit trail**: All tampering attempts are logged
+    - ✅ **Multi-tenancy enforcement**: Automatic company_id isolation
+    - ✅ **Resource hierarchy integrity**: Parent resources verified before child creation
+    
     ## Architecture
     This service follows a microservices architecture with clear separation between:
     - Guardian: Endpoint-level access control (who can call which endpoints)
@@ -197,6 +220,20 @@ components:
       type: object
       required:
         - name
+      description: |
+        Schema for creating a new project.
+        
+        **Security Note**: The following fields are automatically set from authoritative sources
+        and MUST NOT be included in the request body:
+        - `company_id`: Extracted from JWT token (g.company_id)
+        - `created_by`: Extracted from JWT token (g.user_id)
+        
+        If a client attempts to include these fields in the request:
+        - A security warning is logged with user_id and attempted values
+        - The client-provided values are IGNORED
+        - Only the authoritative values from JWT are used
+        
+        This prevents privilege escalation and ensures proper multi-tenancy isolation.
       properties:
         name:
           type: string
@@ -361,6 +398,20 @@ components:
       type: object
       required:
         - name
+      description: |
+        Schema for creating a new milestone within a project.
+        
+        **Security Note**: The following fields are automatically set from authoritative sources
+        and MUST NOT be included in the request body:
+        - `project_id`: Extracted from URL path parameter (/projects/{project_id}/milestones)
+        - `company_id`: Extracted from JWT token (g.company_id)
+        
+        If a client attempts to include these fields in the request:
+        - A security warning is logged with user_id, project_id and attempted values
+        - The client-provided values are IGNORED
+        - Only the authoritative values from URL and JWT are used
+        
+        The parent project is verified for existence and company ownership before creation.
       properties:
         name:
           type: string

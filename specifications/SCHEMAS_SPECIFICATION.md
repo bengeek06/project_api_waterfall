@@ -7,16 +7,64 @@
 
 ## Table des matières
 
-1. [Schémas Project](#schémas-project)
-2. [Schémas Milestone](#schémas-milestone)
-3. [Schémas Deliverable](#schémas-deliverable)
-4. [Schémas Member](#schémas-member)
-5. [Schémas Role](#schémas-role)
-6. [Schémas Policy](#schémas-policy)
-7. [Schémas Permission](#schémas-permission)
-8. [Schémas Associations](#schémas-associations)
-9. [Schémas Contrôle d'accès](#schémas-contrôle-daccès)
-10. [Schémas Réponses communes](#schémas-réponses-communes)
+1. [Principes de Sécurité](#principes-de-sécurité)
+2. [Schémas Project](#schémas-project)
+3. [Schémas Milestone](#schémas-milestone)
+4. [Schémas Deliverable](#schémas-deliverable)
+5. [Schémas Member](#schémas-member)
+6. [Schémas Role](#schémas-role)
+7. [Schémas Policy](#schémas-policy)
+8. [Schémas Permission](#schémas-permission)
+9. [Schémas Associations](#schémas-associations)
+10. [Schémas Contrôle d'accès](#schémas-contrôle-daccès)
+11. [Schémas Réponses communes](#schémas-réponses-communes)
+
+---
+
+## Principes de Sécurité
+
+### Validation avec Autorité des Sources
+
+Tous les schémas de **création** (`ProjectCreate`, `MilestoneCreate`, `DeliverableCreate`, etc.) suivent le principe de **validation avec autorité des sources** :
+
+#### Principe
+
+Les champs critiques (`company_id`, `created_by`, `project_id`) sont **toujours** définis par des sources autoritaires :
+- **JWT** : `company_id`, `user_id` (créateur)
+- **URL** : `project_id` (pour les ressources nested)
+
+Ces valeurs sont injectées **avant validation** du schéma Marshmallow.
+
+#### Détection de Tampering
+
+Si le client tente d'envoyer ces champs dans le payload JSON, le système :
+
+1. **Détecte** la tentative via comparaison avec la valeur autoritaire
+2. **Log un warning de sécurité** avec :
+   - `user_id` de l'utilisateur tentant l'override
+   - `company_id` de l'entreprise
+   - Valeurs tentées vs valeurs autoritaires
+3. **Ignore** la valeur du client
+4. **Utilise TOUJOURS** la valeur autoritaire
+
+#### Exemple de Log de Sécurité
+
+```python
+logger.warning(
+    "Security: Client attempted to override company_id",
+    jwt_company_id="abc-123",
+    payload_company_id="xyz-789",  # Tentative malveillante
+    user_id="user-456",
+    company_id="abc-123"
+)
+```
+
+#### Bénéfices
+
+- ✅ **Traçabilité** : Audit trail des tentatives de manipulation
+- ✅ **Prévention** : Impossible d'escalader privilèges ou accéder aux données d'une autre company
+- ✅ **Transparence** : Le client est validé avec les vraies valeurs
+- ✅ **Simplicité** : Code plus simple avec `Project(**validated_data)`
 
 ---
 
@@ -276,11 +324,19 @@ ProjectCreate:
       example: "EUR"
       pattern: "^[A-Z]{3}$"
 
-# Notes:
-# - company_id est extrait du JWT (g.company_id)
-# - created_by est extrait du JWT (g.user_id)
+# Notes sur la Sécurité:
+# - company_id et created_by sont exclus du schéma de validation
+# - Ils sont injectés AVANT validation depuis des sources autoritaires:
+#   * company_id: extrait du JWT (g.company_id)
+#   * created_by: extrait du JWT (g.user_id)
+# - Si le client tente de les envoyer dans le payload:
+#   * Un WARNING de sécurité est loggé avec user_id et tentative
+#   * La valeur du client est IGNORÉE
+#   * La valeur autoritaire est TOUJOURS utilisée
 # - status est défini automatiquement à 'created'
 # - Le créateur devient automatiquement membre avec role 'owner'
+#
+# Voir: Principes de Sécurité > Validation avec Autorité des Sources
 ```
 
 ---
@@ -691,7 +747,18 @@ MilestoneCreate:
       example: 1
       minimum: 0
 
-# Note: project_id est extrait du path parameter
+# Notes sur la Sécurité:
+# - project_id et company_id sont exclus du schéma de validation
+# - Ils sont injectés AVANT validation depuis des sources autoritaires:
+#   * project_id: extrait du path parameter de l'URL (/projects/{project_id}/milestones)
+#   * company_id: extrait du JWT (g.company_id)
+# - Si le client tente de les envoyer dans le payload:
+#   * Un WARNING de sécurité est loggé avec user_id, project_id et tentative
+#   * La valeur du client est IGNORÉE
+#   * La valeur autoritaire est TOUJOURS utilisée
+# - Le projet parent est vérifié (existence + ownership company_id)
+#
+# Voir: Principes de Sécurité > Validation avec Autorité des Sources
 ```
 
 ---
