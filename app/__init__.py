@@ -193,7 +193,7 @@ def register_error_handlers(app):
     @app.errorhandler(500)
     def internal_error(err):
         import traceback
-        
+
         # Log full traceback
         tb = traceback.format_exc()
         logger.error(
@@ -205,7 +205,7 @@ def register_error_handlers(app):
             method=request.method,
             request_id=getattr(g, "request_id", None),
         )
-        
+
         # Print to console for debugging
         print(f"\n{'='*80}")
         print(f"ERROR 500: {err}")
@@ -214,7 +214,7 @@ def register_error_handlers(app):
         print("\nFull Traceback:")
         print(tb)
         print(f"{'='*80}\n")
-        
+
         response = {
             "message": "Internal server error",
             "path": request.path,

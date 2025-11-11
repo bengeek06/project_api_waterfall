@@ -17,6 +17,10 @@ from app.resources.milestone import (
     MilestoneListResource,
     MilestoneResource,
 )
+from app.resources.deliverable import (
+    DeliverableListResource,
+    DeliverableResource,
+)
 
 
 def register_routes(app):
@@ -51,5 +55,14 @@ def register_routes(app):
         "/projects/<string:project_id>/milestones",
     )
     api.add_resource(MilestoneResource, "/milestones/<string:milestone_id>")
+
+    # Deliverable endpoints
+    api.add_resource(
+        DeliverableListResource,
+        "/projects/<string:project_id>/deliverables",
+    )
+    api.add_resource(
+        DeliverableResource, "/deliverables/<string:deliverable_id>"
+    )
 
     logger.info("Routes registered successfully.")

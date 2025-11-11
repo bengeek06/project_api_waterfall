@@ -91,7 +91,9 @@ class TestProjectResource:
     def test_update_project_put(self, auth_client):
         """Test PUT /projects/{id}."""
         # Create project
-        create_response = auth_client.post("/projects", json={"name": "Original Name"})
+        create_response = auth_client.post(
+            "/projects", json={"name": "Original Name"}
+        )
         project_id = create_response.json["id"]
 
         # Update project
@@ -99,7 +101,9 @@ class TestProjectResource:
             "name": "Updated Name",
             "description": "Updated description",
         }
-        response = auth_client.put(f"/projects/{project_id}", json=update_payload)
+        response = auth_client.put(
+            f"/projects/{project_id}", json=update_payload
+        )
         assert response.status_code == 200
         assert response.json["name"] == "Updated Name"
         assert response.json["description"] == "Updated description"
@@ -107,12 +111,16 @@ class TestProjectResource:
     def test_update_project_patch(self, auth_client):
         """Test PATCH /projects/{id}."""
         # Create project
-        create_response = auth_client.post("/projects", json={"name": "Original Name"})
+        create_response = auth_client.post(
+            "/projects", json={"name": "Original Name"}
+        )
         project_id = create_response.json["id"]
 
         # Partial update
         update_payload = {"description": "Partial update"}
-        response = auth_client.patch(f"/projects/{project_id}", json=update_payload)
+        response = auth_client.patch(
+            f"/projects/{project_id}", json=update_payload
+        )
         assert response.status_code == 200
         assert response.json["name"] == "Original Name"
         assert response.json["description"] == "Partial update"
@@ -120,7 +128,9 @@ class TestProjectResource:
     def test_delete_project(self, auth_client):
         """Test DELETE /projects/{id}."""
         # Create project
-        create_response = auth_client.post("/projects", json={"name": "To Delete"})
+        create_response = auth_client.post(
+            "/projects", json={"name": "To Delete"}
+        )
         project_id = create_response.json["id"]
 
         # Delete project

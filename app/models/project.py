@@ -43,7 +43,9 @@ milestone_deliverable_association = db.Table(
         db.ForeignKey("deliverables.id", ondelete="CASCADE"),
         primary_key=True,
     ),
-    db.Column("created_at", db.DateTime, nullable=False, default=datetime.utcnow),
+    db.Column(
+        "created_at", db.DateTime, nullable=False, default=datetime.utcnow
+    ),
 )
 
 role_policy_association = db.Table(
@@ -60,7 +62,9 @@ role_policy_association = db.Table(
         db.ForeignKey("project_policies.id", ondelete="CASCADE"),
         primary_key=True,
     ),
-    db.Column("created_at", db.DateTime, nullable=False, default=datetime.utcnow),
+    db.Column(
+        "created_at", db.DateTime, nullable=False, default=datetime.utcnow
+    ),
 )
 
 policy_permission_association = db.Table(
@@ -77,7 +81,9 @@ policy_permission_association = db.Table(
         db.ForeignKey("project_permissions.id", ondelete="CASCADE"),
         primary_key=True,
     ),
-    db.Column("created_at", db.DateTime, nullable=False, default=datetime.utcnow),
+    db.Column(
+        "created_at", db.DateTime, nullable=False, default=datetime.utcnow
+    ),
 )
 
 
@@ -107,7 +113,9 @@ class Project(db.Model):
     __tablename__ = "projects"
 
     # Primary key
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # Core fields
     name = db.Column(db.String(100), nullable=False)
@@ -123,7 +131,9 @@ class Project(db.Model):
     )  # User who created (external UUID as string)
 
     # Lifecycle status
-    status = db.Column(db.String(20), nullable=False, default="created", index=True)
+    status = db.Column(
+        db.String(20), nullable=False, default="created", index=True
+    )
 
     # Consultation phase dates
     consultation_date = db.Column(db.Date, nullable=True)
@@ -144,7 +154,9 @@ class Project(db.Model):
     contract_amount = db.Column(
         db.Numeric(12, 2), nullable=True
     )  # Decimal for precision
-    budget_currency = db.Column(db.String(3), nullable=True, default="EUR")  # ISO 4217
+    budget_currency = db.Column(
+        db.String(3), nullable=True, default="EUR"
+    )  # ISO 4217
 
     # Lifecycle timestamps
     suspended_at = db.Column(db.DateTime, nullable=True)
@@ -152,7 +164,9 @@ class Project(db.Model):
     archived_at = db.Column(db.DateTime, nullable=True)
 
     # Audit trail
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -278,7 +292,9 @@ class Milestone(db.Model):
     __tablename__ = "milestones"
 
     # Primary key
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # Foreign keys
     project_id = db.Column(
@@ -301,7 +317,9 @@ class Milestone(db.Model):
     actual_date = db.Column(db.Date, nullable=True)
 
     # Audit trail
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -348,7 +366,9 @@ class Deliverable(db.Model):
     __tablename__ = "deliverables"
 
     # Primary key
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # Foreign keys
     project_id = db.Column(
@@ -362,7 +382,7 @@ class Deliverable(db.Model):
     # Core fields
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500), nullable=True)
-    type = db.Column(db.String(20), nullable=False)
+    type = db.Column(db.String(20), nullable=False, default="document")
 
     # Status and dates
     status = db.Column(db.String(20), nullable=False, default="planned")
@@ -370,7 +390,9 @@ class Deliverable(db.Model):
     actual_date = db.Column(db.Date, nullable=True)
 
     # Audit trail
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -479,7 +501,9 @@ class ProjectRole(db.Model):
     __tablename__ = "project_roles"
 
     # Primary key
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # Foreign keys
     project_id = db.Column(
@@ -498,7 +522,9 @@ class ProjectRole(db.Model):
     )  # True for owner/validator/contributor/viewer
 
     # Audit trail
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -542,7 +568,9 @@ class ProjectPolicy(db.Model):
     __tablename__ = "project_policies"
 
     # Primary key
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # Foreign keys
     project_id = db.Column(
@@ -558,7 +586,9 @@ class ProjectPolicy(db.Model):
     description = db.Column(db.String(200), nullable=True)
 
     # Audit trail
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -585,7 +615,9 @@ class ProjectPolicy(db.Model):
     __table_args__ = (
         Index("idx_project_policies_project_name", "project_id", "name"),
         Index("idx_project_policies_company", "company_id"),
-        db.UniqueConstraint("project_id", "name", name="uq_project_policy_name"),
+        db.UniqueConstraint(
+            "project_id", "name", name="uq_project_policy_name"
+        ),
     )
 
     def __repr__(self):
@@ -622,7 +654,9 @@ class ProjectPermission(db.Model):
     __tablename__ = "project_permissions"
 
     # Primary key
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # Foreign keys
     project_id = db.Column(
@@ -641,7 +675,9 @@ class ProjectPermission(db.Model):
     )  # file_operations, project_operations, member_operations
 
     # Audit trail
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
     removed_at = db.Column(db.DateTime, nullable=True)
 
     # Relationships
@@ -656,7 +692,9 @@ class ProjectPermission(db.Model):
         Index("idx_project_permissions_project_name", "project_id", "name"),
         Index("idx_project_permissions_company", "company_id"),
         Index("idx_project_permissions_category", "category"),
-        db.UniqueConstraint("project_id", "name", name="uq_project_permission_name"),
+        db.UniqueConstraint(
+            "project_id", "name", name="uq_project_permission_name"
+        ),
         CheckConstraint(
             "category IN ('file_operations', 'project_operations', 'member_operations')",
             name="check_permission_category",
@@ -682,7 +720,9 @@ class ProjectHistory(db.Model):
     __tablename__ = "project_history"
 
     # Primary key
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # Foreign keys
     project_id = db.Column(
@@ -711,7 +751,9 @@ class ProjectHistory(db.Model):
     old_value = db.Column(
         db.Text, nullable=True
     )  # Previous value (JSON for complex types)
-    new_value = db.Column(db.Text, nullable=True)  # New value (JSON for complex types)
+    new_value = db.Column(
+        db.Text, nullable=True
+    )  # New value (JSON for complex types)
     comment = db.Column(db.String(500), nullable=True)  # Optional comment
 
     # Relationships
