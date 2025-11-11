@@ -40,6 +40,10 @@ from app.resources.milestone_deliverable import (
     MilestoneDeliverableListResource,
     MilestoneDeliverableResource,
 )
+from app.resources.role_policy import (
+    RolePolicyListResource,
+    RolePolicyResource,
+)
 
 
 def register_routes(app):
@@ -126,6 +130,16 @@ def register_routes(app):
     api.add_resource(
         MilestoneDeliverableResource,
         "/projects/<string:project_id>/milestones/<string:milestone_id>/deliverables/<string:deliverable_id>",
+    )
+
+    # Role-Policy association endpoints
+    api.add_resource(
+        RolePolicyListResource,
+        "/projects/<string:project_id>/roles/<string:role_id>/policies",
+    )
+    api.add_resource(
+        RolePolicyResource,
+        "/projects/<string:project_id>/roles/<string:role_id>/policies/<string:policy_id>",
     )
 
     logger.info("Routes registered successfully.")
