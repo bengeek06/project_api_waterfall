@@ -229,7 +229,9 @@ class ProjectResource(BaseResource):
         except Exception as error:
             return self.handle_error(error)
 
-    def _update(self, project_id, partial=False):  # pylint: disable=too-many-locals
+    def _update(
+        self, project_id, partial=False
+    ):  # pylint: disable=too-many-locals
         """Internal method to update a project."""
         try:
             validate_uuid(project_id, "project_id")
@@ -252,7 +254,10 @@ class ProjectResource(BaseResource):
                         setattr(project, field, value)
 
             # Seed permissions when project transitions to 'initialized'
-            if "status" in changes and changes["status"]["to"] == "initialized":
+            if (
+                "status" in changes
+                and changes["status"]["to"] == "initialized"
+            ):
                 seed_project_permissions(project.id, company_id)
 
             # Create history entries for each changed field

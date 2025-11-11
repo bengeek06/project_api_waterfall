@@ -11,8 +11,10 @@ Used by other services to check if a user has permission to perform
 specific actions on files or projects.
 
 Resources:
-- CheckFileAccessResource: POST /check-file-access (batch file authorization)
-- CheckProjectAccessResource: POST /check-project-access (batch project authorization)
+- CheckFileAccessResource: POST /check-file-access (single file authorization)
+- CheckProjectAccessResource: POST /check-project-access (single project authorization)
+- CheckFileAccessBatchResource: POST /check-file-access-batch (batch file authorization)
+- CheckProjectAccessBatchResource: POST /check-project-access-batch (batch project authorization)
 """
 
 from flask import g, request
@@ -287,3 +289,289 @@ class CheckProjectAccessResource(Resource):
                     return True
 
         return False
+
+
+class CheckFileAccessBatchResource(Resource):
+    """
+    Check if user has permission to access files (batch).
+
+    POST: Batch check file access permissions
+    Expected JSON body per OpenAPI spec:
+    {
+        "checks": [
+            {"project_id": "uuid", "action": "read_files"},
+            {"project_id": "uuid", "action": "write_files"}
+        ]
+    }
+
+    Returns:
+    {
+        "results": [
+            {
+                "project_id": "uuid",
+                "action": "read_files",
+                "allowed": true,
+                "role": "owner",
+                "reason": null
+            },
+            {
+                "project_id": "uuid",
+                "action": "write_files",
+                "allowed": false,
+                "role": "viewer",
+                "reason": "Permission denied"
+            }
+        ]
+    }
+    """
+
+    @require_jwt_auth()
+    def post(self):
+        """
+        Batch check file access permissions for the authenticated user.
+
+        Evaluates the complete permission chain for each file check.
+        """
+        company_id = g.company_id
+        user_id = g.user_id
+
+        data = request.get_json()
+        if not data or "checks" not in data:
+            return {"error": "checks array is required"}, 400
+
+        checks = data["checks"]
+        if not isinstance(checks, list):
+            return {"error": "checks must be an array"}, 400
+
+        results = []
+
+        for check in checks:
+            # Validate check structure
+            if not all(key in check for key in ["project_id", "action"]):
+                results.append(
+                    {
+                        "project_id": check.get("project_id"),
+                        "action": check.get("action"),
+                        "allowed": False,
+                        "role": None,
+                        "reason": "Invalid check format",
+                    }
+                )
+                continue
+
+            project_id = check["project_id"]
+            action = check["action"]
+
+            # Check permission and get role info
+            allowed, role_name, reason = self._check_user_permission(
+                user_id, company_id, project_id, action
+            )
+
+            results.append(
+                {
+                    "project_id": project_id,
+                    "action": action,
+                    "allowed": allowed,
+                    "role": role_name,
+                    "reason": reason,
+                }
+            )
+
+        return {"results": results}, 200
+
+    def _check_user_permission(self, user_id, company_id, project_id, action):
+        """
+        Check if user has permission to perform action on project.
+
+        Args:
+            user_id: User ID
+            company_id: Company ID
+            project_id: Project ID
+            action: Permission action (e.g., 'read_files', 'write_files')
+
+        Returns:
+            tuple: (allowed: bool, role_name: str|None, reason: str|None)
+        """
+        # 1. Verify project exists and belongs to company
+        project = db.session.get(Project, project_id)
+        if (
+            not project
+            or project.company_id != company_id
+            or project.removed_at
+        ):
+            return False, None, "Project not found"
+
+        # 2. Get user's membership in the project
+        member = (
+            db.session.query(ProjectMember)
+            .filter_by(project_id=project_id, user_id=user_id)
+            .filter(ProjectMember.removed_at.is_(None))
+            .first()
+        )
+
+        if not member:
+            return False, None, "User is not a member of the project"
+
+        # 3. Get member's role
+        role = member.role
+        if not role or role.removed_at:
+            return False, None, "No valid role assigned"
+
+        # 4. Get policies associated with the role
+        policies = [p for p in role.policies if not p.removed_at]
+
+        # 5. Check if any policy has the required permission
+        for policy in policies:
+            permissions = [p for p in policy.permissions if not p.removed_at]
+            for permission in permissions:
+                if permission.name == action:
+                    return True, role.name, None
+
+        return False, role.name, "Permission denied"
+
+
+class CheckProjectAccessBatchResource(Resource):
+    """
+    Check if user has permission to access projects (batch).
+
+    POST: Batch check project access permissions
+    Expected JSON body per OpenAPI spec:
+    {
+        "checks": [
+            {"project_id": "uuid", "action": "read"},
+            {"project_id": "uuid", "action": "write"}
+        ]
+    }
+
+    Returns:
+    {
+        "results": [
+            {
+                "project_id": "uuid",
+                "action": "read",
+                "allowed": true,
+                "role": "owner",
+                "reason": null
+            },
+            {
+                "project_id": "uuid",
+                "action": "write",
+                "allowed": false,
+                "role": "viewer",
+                "reason": "Permission denied"
+            }
+        ]
+    }
+    """
+
+    @require_jwt_auth()
+    def post(self):
+        """
+        Batch check project access permissions for the authenticated user.
+
+        Evaluates the complete permission chain for each project check.
+        """
+        company_id = g.company_id
+        user_id = g.user_id
+
+        data = request.get_json()
+        if not data or "checks" not in data:
+            return {"error": "checks array is required"}, 400
+
+        checks = data["checks"]
+        if not isinstance(checks, list):
+            return {"error": "checks must be an array"}, 400
+
+        results = []
+
+        for check in checks:
+            # Validate check structure
+            if not all(key in check for key in ["project_id", "action"]):
+                results.append(
+                    {
+                        "project_id": check.get("project_id"),
+                        "action": check.get("action"),
+                        "allowed": False,
+                        "role": None,
+                        "reason": "Invalid check format",
+                    }
+                )
+                continue
+
+            project_id = check["project_id"]
+            action = check["action"]
+
+            # Check permission and get role info
+            allowed, role_name, reason = self._check_user_permission(
+                user_id, company_id, project_id, action
+            )
+
+            results.append(
+                {
+                    "project_id": project_id,
+                    "action": action,
+                    "allowed": allowed,
+                    "role": role_name,
+                    "reason": reason,
+                }
+            )
+
+        return {"results": results}, 200
+
+    def _check_user_permission(self, user_id, company_id, project_id, action):
+        """
+        Check if user has permission to perform action on project.
+
+        Args:
+            user_id: User ID
+            company_id: Company ID
+            project_id: Project ID
+            action: Permission action (e.g., 'read', 'write', 'manage')
+
+        Returns:
+            tuple: (allowed: bool, role_name: str|None, reason: str|None)
+        """
+        # 1. Verify project exists and belongs to company
+        project = db.session.get(Project, project_id)
+        if (
+            not project
+            or project.company_id != company_id
+            or project.removed_at
+        ):
+            return False, None, "Project not found"
+
+        # 2. Get user's membership in the project
+        member = (
+            db.session.query(ProjectMember)
+            .filter_by(project_id=project_id, user_id=user_id)
+            .filter(ProjectMember.removed_at.is_(None))
+            .first()
+        )
+
+        if not member:
+            return False, None, "User is not a member of the project"
+
+        # 3. Get member's role
+        role = member.role
+        if not role or role.removed_at:
+            return False, None, "No valid role assigned"
+
+        # Map generic actions to specific permissions
+        action_map = {
+            "read": "read_files",
+            "write": "write_files",
+            "manage": "manage_project",
+        }
+        permission_name = action_map.get(action, action)
+
+        # 4. Get policies associated with the role
+        policies = [p for p in role.policies if not p.removed_at]
+
+        # 5. Check if any policy has the required permission
+        for policy in policies:
+            permissions = [p for p in policy.permissions if not p.removed_at]
+            for permission in permissions:
+                if permission.name == permission_name:
+                    return True, role.name, None
+
+        return False, role.name, "Permission denied"
