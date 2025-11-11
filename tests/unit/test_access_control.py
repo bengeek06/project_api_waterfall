@@ -35,12 +35,15 @@ def project_with_permissions(auth_client):
     """Create a project, initialize it, and set up RBAC chain."""
     # Create project
     project_response = auth_client.post(
-        "/projects", json={"name": "Test Project", "description": "For access tests"}
+        "/projects",
+        json={"name": "Test Project", "description": "For access tests"},
     )
     project = project_response.get_json()
 
     # Initialize project to seed permissions
-    auth_client.patch(f"/projects/{project['id']}", json={"status": "initialized"})
+    auth_client.patch(
+        f"/projects/{project['id']}", json={"status": "initialized"}
+    )
 
     # Create a role
     role_response = auth_client.post(
@@ -67,13 +70,19 @@ def project_with_permissions(auth_client):
     policy = policy_response.get_json()
 
     # Get some permissions
-    permissions_response = auth_client.get(f"/projects/{project['id']}/permissions")
+    permissions_response = auth_client.get(
+        f"/projects/{project['id']}/permissions"
+    )
     permissions = permissions_response.get_json()
 
     # Assign permissions to policy
     read_files_perm = next(p for p in permissions if p["name"] == "read_files")
-    write_files_perm = next(p for p in permissions if p["name"] == "write_files")
-    update_project_perm = next(p for p in permissions if p["name"] == "update_project")
+    write_files_perm = next(
+        p for p in permissions if p["name"] == "write_files"
+    )
+    update_project_perm = next(
+        p for p in permissions if p["name"] == "update_project"
+    )
 
     auth_client.post(
         f"/projects/{project['id']}/policies/{policy['id']}/permissions",
@@ -110,7 +119,9 @@ def project_with_permissions(auth_client):
 class TestCheckFileAccessResource:
     """Tests for CheckFileAccessResource (POST /check-file-access)"""
 
-    def test_check_file_access_allowed(self, auth_client, project_with_permissions):
+    def test_check_file_access_allowed(
+        self, auth_client, project_with_permissions
+    ):
         """Test file access check returns allowed=true when user has permission"""
         project = project_with_permissions["project"]
         file_id = str(uuid.uuid4())
@@ -138,7 +149,9 @@ class TestCheckFileAccessResource:
         assert result["action"] == "read_files"
         assert result["allowed"] is True
 
-    def test_check_file_access_denied(self, auth_client, project_with_permissions):
+    def test_check_file_access_denied(
+        self, auth_client, project_with_permissions
+    ):
         """Test file access check returns allowed=false when user lacks permission"""
         project = project_with_permissions["project"]
         file_id = str(uuid.uuid4())
@@ -162,7 +175,9 @@ class TestCheckFileAccessResource:
         result = data["results"][0]
         assert result["allowed"] is False
 
-    def test_check_file_access_batch(self, auth_client, project_with_permissions):
+    def test_check_file_access_batch(
+        self, auth_client, project_with_permissions
+    ):
         """Test batch file access checks"""
         project = project_with_permissions["project"]
         file1_id = str(uuid.uuid4())
@@ -207,7 +222,9 @@ class TestCheckFileAccessResource:
         auth_client.set_cookie("access_token", other_token, domain="localhost")
 
         # Create a project but don't add the user as member
-        project_response = auth_client.post("/projects", json={"name": "Other Project"})
+        project_response = auth_client.post(
+            "/projects", json={"name": "Other Project"}
+        )
         project = project_response.get_json()
 
         file_id = str(uuid.uuid4())
@@ -247,7 +264,9 @@ class TestCheckFileAccessResource:
             "/check-file-access",
             json={
                 "file_checks": [
-                    {"file_id": str(uuid.uuid4())}  # Missing project_id and action
+                    {
+                        "file_id": str(uuid.uuid4())
+                    }  # Missing project_id and action
                 ]
             },
         )
@@ -297,7 +316,9 @@ class TestCheckFileAccessResource:
 class TestCheckProjectAccessResource:
     """Tests for CheckProjectAccessResource (POST /check-project-access)"""
 
-    def test_check_project_access_allowed(self, auth_client, project_with_permissions):
+    def test_check_project_access_allowed(
+        self, auth_client, project_with_permissions
+    ):
         """Test project access check returns allowed=true when user has permission"""
         project = project_with_permissions["project"]
 
@@ -319,7 +340,9 @@ class TestCheckProjectAccessResource:
         assert result["action"] == "update_project"
         assert result["allowed"] is True
 
-    def test_check_project_access_denied(self, auth_client, project_with_permissions):
+    def test_check_project_access_denied(
+        self, auth_client, project_with_permissions
+    ):
         """Test project access check returns allowed=false when user lacks permission"""
         project = project_with_permissions["project"]
 
@@ -338,7 +361,9 @@ class TestCheckProjectAccessResource:
         result = data["results"][0]
         assert result["allowed"] is False
 
-    def test_check_project_access_batch(self, auth_client, project_with_permissions):
+    def test_check_project_access_batch(
+        self, auth_client, project_with_permissions
+    ):
         """Test batch project access checks"""
         project = project_with_permissions["project"]
 
@@ -368,7 +393,9 @@ class TestCheckProjectAccessResource:
         auth_client.set_cookie("access_token", other_token, domain="localhost")
 
         # Create a project but don't add the user as member
-        project_response = auth_client.post("/projects", json={"name": "Other Project"})
+        project_response = auth_client.post(
+            "/projects", json={"name": "Other Project"}
+        )
         project = project_response.get_json()
 
         response = auth_client.post(
@@ -417,7 +444,10 @@ class TestCheckProjectAccessResource:
             "/check-project-access",
             json={
                 "project_checks": [
-                    {"project_id": str(uuid.uuid4()), "action": "update_project"}
+                    {
+                        "project_id": str(uuid.uuid4()),
+                        "action": "update_project",
+                    }
                 ]
             },
         )
@@ -432,7 +462,10 @@ class TestCheckProjectAccessResource:
             "/check-project-access",
             json={
                 "project_checks": [
-                    {"project_id": str(uuid.uuid4()), "action": "update_project"}
+                    {
+                        "project_id": str(uuid.uuid4()),
+                        "action": "update_project",
+                    }
                 ]
             },
         )

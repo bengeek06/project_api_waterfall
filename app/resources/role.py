@@ -276,7 +276,10 @@ class RoleResource(Resource):
         if role.is_default:
             return {
                 "error": "Cannot modify default role",
-                "detail": "Default roles (owner, validator, contributor, viewer) cannot be modified",
+                "detail": (
+                    "Default roles (owner, validator, contributor, viewer) "
+                    "cannot be modified"
+                ),
             }, 400
 
         # Parse and validate request data

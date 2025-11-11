@@ -50,7 +50,9 @@ def project(auth_client):
 def policy(auth_client, project):
     """Create a test policy."""
     payload = {"name": "Test Policy", "description": "Test policy"}
-    response = auth_client.post(f"/projects/{project['id']}/policies", json=payload)
+    response = auth_client.post(
+        f"/projects/{project['id']}/policies", json=payload
+    )
     assert response.status_code == 201
     return response.get_json()
 
@@ -78,7 +80,9 @@ class TestPolicyPermissionListResource:
         assert isinstance(data, list)
         assert len(data) == 0
 
-    def test_add_permission_association(self, auth_client, project, policy, permission):
+    def test_add_permission_association(
+        self, auth_client, project, policy, permission
+    ):
         """Test POST creates association between policy and permission"""
         response = auth_client.post(
             f"/projects/{project['id']}/policies/{policy['id']}/permissions",
@@ -108,7 +112,9 @@ class TestPolicyPermissionListResource:
         assert len(data) == 1
         assert data[0]["id"] == permission["id"]
 
-    def test_add_duplicate_association(self, auth_client, project, policy, permission):
+    def test_add_duplicate_association(
+        self, auth_client, project, policy, permission
+    ):
         """Test POST returns 409 when trying to create duplicate association"""
         # Create first association
         response = auth_client.post(
@@ -147,7 +153,9 @@ class TestPolicyPermissionListResource:
         data = response.get_json()
         assert "not found" in data["error"].lower()
 
-    def test_add_permission_from_different_project(self, auth_client, project, policy):
+    def test_add_permission_from_different_project(
+        self, auth_client, project, policy
+    ):
         """Test POST returns 404 when permission belongs to different project"""
         # Create another project and initialize it to seed permissions
         other_project_response = auth_client.post(
@@ -211,7 +219,9 @@ class TestPolicyPermissionListResource:
         )
         assert response.status_code == 404
 
-    def test_multiple_permissions_association(self, auth_client, project, policy):
+    def test_multiple_permissions_association(
+        self, auth_client, project, policy
+    ):
         """Test that a policy can have multiple permissions"""
         # Get two seeded permissions
         response = auth_client.get(f"/projects/{project['id']}/permissions")
@@ -244,7 +254,9 @@ class TestPolicyPermissionListResource:
 class TestPolicyPermissionResource:
     """Tests for PolicyPermissionResource (DELETE)"""
 
-    def test_remove_association(self, auth_client, project, policy, permission):
+    def test_remove_association(
+        self, auth_client, project, policy, permission
+    ):
         """Test DELETE removes association between policy and permission"""
         # Create association
         auth_client.post(

@@ -73,7 +73,9 @@ class TestMemberListResource:
 
         payload = {"user_id": new_user_id, "role_id": role_id}
 
-        response = auth_client.post(f"/projects/{project_id}/members", json=payload)
+        response = auth_client.post(
+            f"/projects/{project_id}/members", json=payload
+        )
         if response.status_code != 201:
             print(f"Error response: {response.json}")
         assert response.status_code == 201
@@ -88,7 +90,9 @@ class TestMemberListResource:
 
         payload = {"role_id": role_id}
 
-        response = auth_client.post(f"/projects/{project_id}/members", json=payload)
+        response = auth_client.post(
+            f"/projects/{project_id}/members", json=payload
+        )
         assert response.status_code == 400
         assert "errors" in response.json
 
@@ -99,7 +103,9 @@ class TestMemberListResource:
 
         payload = {"user_id": new_user_id}
 
-        response = auth_client.post(f"/projects/{project_id}/members", json=payload)
+        response = auth_client.post(
+            f"/projects/{project_id}/members", json=payload
+        )
         assert response.status_code == 400
         assert "errors" in response.json
 
@@ -111,7 +117,9 @@ class TestMemberListResource:
 
         payload = {"user_id": new_user_id, "role_id": fake_role_id}
 
-        response = auth_client.post(f"/projects/{project_id}/members", json=payload)
+        response = auth_client.post(
+            f"/projects/{project_id}/members", json=payload
+        )
         assert response.status_code == 404
         assert "role" in response.json["error"].lower()
 
@@ -124,11 +132,15 @@ class TestMemberListResource:
         payload = {"user_id": new_user_id, "role_id": role_id}
 
         # Add member first time
-        response1 = auth_client.post(f"/projects/{project_id}/members", json=payload)
+        response1 = auth_client.post(
+            f"/projects/{project_id}/members", json=payload
+        )
         assert response1.status_code == 201
 
         # Try to add same member again
-        response2 = auth_client.post(f"/projects/{project_id}/members", json=payload)
+        response2 = auth_client.post(
+            f"/projects/{project_id}/members", json=payload
+        )
         assert response2.status_code == 409
         assert "already exists" in response2.json["error"].lower()
 
@@ -182,7 +194,9 @@ class TestMemberResource:
         project_id = project_with_role["project_id"]
         fake_user_id = str(uuid.uuid4())
 
-        response = auth_client.get(f"/projects/{project_id}/members/{fake_user_id}")
+        response = auth_client.get(
+            f"/projects/{project_id}/members/{fake_user_id}"
+        )
         assert response.status_code == 404
         assert "not found" in response.json["error"].lower()
 
@@ -288,11 +302,15 @@ class TestMemberResource:
         )
 
         # Delete member
-        response = auth_client.delete(f"/projects/{project_id}/members/{user_id}")
+        response = auth_client.delete(
+            f"/projects/{project_id}/members/{user_id}"
+        )
         assert response.status_code == 204
 
         # Verify member is gone
-        get_response = auth_client.get(f"/projects/{project_id}/members/{user_id}")
+        get_response = auth_client.get(
+            f"/projects/{project_id}/members/{user_id}"
+        )
         assert get_response.status_code == 404
 
     def test_delete_member_not_found(self, auth_client, project_with_role):
@@ -300,7 +318,9 @@ class TestMemberResource:
         project_id = project_with_role["project_id"]
         fake_user_id = str(uuid.uuid4())
 
-        response = auth_client.delete(f"/projects/{project_id}/members/{fake_user_id}")
+        response = auth_client.delete(
+            f"/projects/{project_id}/members/{fake_user_id}"
+        )
         assert response.status_code == 404
 
     def test_unauthorized_missing_jwt(self, client):

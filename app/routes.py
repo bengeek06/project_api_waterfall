@@ -8,7 +8,6 @@ Routes for the Flask application.
 
 from flask_restful import Api
 from app.logger import logger
-from app.resources.dummy import DummyResource, DummyListResource
 from app.resources.version import VersionResource
 from app.resources.config import ConfigResource
 from app.resources.health import HealthResource
@@ -61,9 +60,8 @@ def register_routes(app):
     Args:
         app (Flask): The Flask application instance.
 
-    This function creates a Flask-RESTful Api instance, adds the resource
-    endpoints for managing dummy items, and logs the successful registration
-    of routes.
+    This function creates a Flask-RESTful Api instance and adds all resource
+    endpoints for the Project Service API.
     """
     api = Api(app)
 
@@ -71,10 +69,6 @@ def register_routes(app):
     api.add_resource(HealthResource, "/health")
     api.add_resource(VersionResource, "/version")
     api.add_resource(ConfigResource, "/config")
-
-    # Legacy dummy endpoints (to be removed)
-    api.add_resource(DummyListResource, "/dummies")
-    api.add_resource(DummyResource, "/dummies/<int:dummy_id>")
 
     # Project endpoints
     api.add_resource(ProjectListResource, "/projects")
@@ -92,7 +86,9 @@ def register_routes(app):
         DeliverableListResource,
         "/projects/<string:project_id>/deliverables",
     )
-    api.add_resource(DeliverableResource, "/deliverables/<string:deliverable_id>")
+    api.add_resource(
+        DeliverableResource, "/deliverables/<string:deliverable_id>"
+    )
 
     # Member endpoints
     api.add_resource(
@@ -137,7 +133,8 @@ def register_routes(app):
     )
     api.add_resource(
         MilestoneDeliverableResource,
-        "/projects/<string:project_id>/milestones/<string:milestone_id>/deliverables/<string:deliverable_id>",
+        "/projects/<string:project_id>/milestones/<string:milestone_id>"
+        "/deliverables/<string:deliverable_id>",
     )
 
     # Role-Policy association endpoints
@@ -157,7 +154,8 @@ def register_routes(app):
     )
     api.add_resource(
         PolicyPermissionResource,
-        "/projects/<string:project_id>/policies/<string:policy_id>/permissions/<string:permission_id>",
+        "/projects/<string:project_id>/policies/<string:policy_id>"
+        "/permissions/<string:permission_id>",
     )
 
     # Access Control endpoints

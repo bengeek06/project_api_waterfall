@@ -76,11 +76,15 @@ class TestRoleListResource:
         payload = {"name": "manager", "description": "First manager role"}
 
         # Create first role
-        response1 = auth_client.post(f"/projects/{project}/roles", json=payload)
+        response1 = auth_client.post(
+            f"/projects/{project}/roles", json=payload
+        )
         assert response1.status_code == 201
 
         # Try to create duplicate
-        response2 = auth_client.post(f"/projects/{project}/roles", json=payload)
+        response2 = auth_client.post(
+            f"/projects/{project}/roles", json=payload
+        )
         assert response2.status_code == 409
         assert "already exists" in response2.json["error"].lower()
 
@@ -229,7 +233,9 @@ class TestRoleResource:
     def test_delete_role_not_found(self, auth_client, project):
         """Test DELETE with non-existent role."""
         fake_role_id = str(uuid.uuid4())
-        response = auth_client.delete(f"/projects/{project}/roles/{fake_role_id}")
+        response = auth_client.delete(
+            f"/projects/{project}/roles/{fake_role_id}"
+        )
         assert response.status_code == 404
 
     def test_delete_default_role_forbidden(self, auth_client, project):
@@ -249,7 +255,9 @@ class TestRoleResource:
         db.session.commit()
 
         # Try to delete it
-        response = auth_client.delete(f"/projects/{project}/roles/{default_role.id}")
+        response = auth_client.delete(
+            f"/projects/{project}/roles/{default_role.id}"
+        )
         assert response.status_code == 400
         assert "cannot delete" in response.json["error"].lower()
 
@@ -294,7 +302,9 @@ class TestRoleResource:
         assert response.status_code == 401
 
         # POST
-        response = client.post(f"/projects/{project_id}/roles", json={"name": "role1"})
+        response = client.post(
+            f"/projects/{project_id}/roles", json={"name": "role1"}
+        )
         assert response.status_code == 401
 
         # GET single

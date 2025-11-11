@@ -18,18 +18,19 @@ Resources:
 - PolicyResource: GET (retrieve), PUT (full update), PATCH (partial update), DELETE (soft delete)
 """
 
+from datetime import datetime, timezone
 from flask import request, g
 from flask_restful import Resource
+from marshmallow import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.db import db
-from app.models.project import ProjectPolicy, Project
+from app.models.project import ProjectPolicy, Project, role_policy_association
 from app.schemas.project_schema import (
     ProjectPolicySchema,
     ProjectPolicyCreateSchema,
     ProjectPolicyUpdateSchema,
 )
 from app.utils import require_jwt_auth, check_access_required
-from marshmallow import ValidationError
 
 
 class PolicyListResource(Resource):
@@ -79,7 +80,10 @@ class PolicyListResource(Resource):
             return schema.dump(policies), 200
 
         except Exception as e:
-            return {"error": "Failed to retrieve policies", "detail": str(e)}, 500
+            return {
+                "error": "Failed to retrieve policies",
+                "detail": str(e),
+            }, 500
 
     @require_jwt_auth()
     @check_access_required("manage_policies")
@@ -115,7 +119,10 @@ class PolicyListResource(Resource):
             try:
                 data = schema.load(request.get_json())
             except ValidationError as err:
-                return {"error": "Invalid input data", "detail": err.messages}, 400
+                return {
+                    "error": "Invalid input data",
+                    "detail": err.messages,
+                }, 400
 
             # Check for duplicate policy name in project
             existing_policy = ProjectPolicy.query.filter_by(
@@ -198,7 +205,10 @@ class PolicyResource(Resource):
             return schema.dump(policy), 200
 
         except Exception as e:
-            return {"error": "Failed to retrieve policy", "detail": str(e)}, 500
+            return {
+                "error": "Failed to retrieve policy",
+                "detail": str(e),
+            }, 500
 
     @require_jwt_auth()
     @check_access_required("manage_policies")
@@ -259,8 +269,6 @@ class PolicyResource(Resource):
                 return {"error": "Policy not found"}, 404
 
             # Check if policy is assigned to any roles
-            from app.models.project import ProjectRole, role_policy_association
-
             role_count = (
                 db.session.query(role_policy_association)
                 .filter_by(policy_id=policy_id)
@@ -270,12 +278,14 @@ class PolicyResource(Resource):
             if role_count > 0:
                 return {
                     "error": "Cannot delete policy that is assigned to roles",
-                    "detail": f"This policy is currently assigned to {role_count} role(s). Remove the policy from all roles before deleting.",
+                    "detail": (
+                        f"This policy is currently assigned to {role_count} "
+                        f"role(s). Remove the policy from all roles before "
+                        f"deleting."
+                    ),
                 }, 400
 
             # Soft delete the policy
-            from datetime import datetime, timezone
-
             policy.removed_at = datetime.now(timezone.utc)
             db.session.commit()
 
@@ -312,7 +322,10 @@ class PolicyResource(Resource):
             try:
                 data = schema.load(request.get_json())
             except ValidationError as err:
-                return {"error": "Invalid input data", "detail": err.messages}, 400
+                return {
+                    "error": "Invalid input data",
+                    "detail": err.messages,
+                }, 400
 
             # Check for duplicate policy name if name is being changed
             if "name" in data and data["name"] != policy.name:
@@ -359,5 +372,8 @@ class PolicyResource(Resource):
             ProjectPolicy object or None
         """
         return ProjectPolicy.query.filter_by(
-            id=policy_id, project_id=project_id, company_id=company_id, removed_at=None
+            id=policy_id,
+            project_id=project_id,
+            company_id=company_id,
+            removed_at=None,
         ).first()

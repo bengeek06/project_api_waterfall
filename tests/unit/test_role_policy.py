@@ -42,7 +42,9 @@ def project(auth_client):
 def role(auth_client, project):
     """Create a test role."""
     payload = {"name": "Test Role", "description": "Test role"}
-    response = auth_client.post(f"/projects/{project['id']}/roles", json=payload)
+    response = auth_client.post(
+        f"/projects/{project['id']}/roles", json=payload
+    )
     assert response.status_code == 201
     return response.get_json()
 
@@ -51,7 +53,9 @@ def role(auth_client, project):
 def policy(auth_client, project):
     """Create a test policy."""
     payload = {"name": "Test Policy", "description": "Test policy"}
-    response = auth_client.post(f"/projects/{project['id']}/policies", json=payload)
+    response = auth_client.post(
+        f"/projects/{project['id']}/policies", json=payload
+    )
     assert response.status_code == 201
     return response.get_json()
 
@@ -80,7 +84,9 @@ class TestRolePolicyListResource:
         assert data["id"] == policy["id"]
         assert data["name"] == policy["name"]
 
-    def test_get_policies_after_association(self, auth_client, project, role, policy):
+    def test_get_policies_after_association(
+        self, auth_client, project, role, policy
+    ):
         """Test GET returns associated policies"""
         # Create association
         auth_client.post(
@@ -97,7 +103,9 @@ class TestRolePolicyListResource:
         assert len(data) == 1
         assert data[0]["id"] == policy["id"]
 
-    def test_add_duplicate_association(self, auth_client, project, role, policy):
+    def test_add_duplicate_association(
+        self, auth_client, project, role, policy
+    ):
         """Test POST returns 409 when trying to create duplicate association"""
         # Create first association
         response = auth_client.post(
@@ -136,7 +144,9 @@ class TestRolePolicyListResource:
         data = response.get_json()
         assert "not found" in data["error"].lower()
 
-    def test_add_policy_from_different_project(self, auth_client, project, role):
+    def test_add_policy_from_different_project(
+        self, auth_client, project, role
+    ):
         """Test POST returns 404 when policy belongs to different project"""
         # Create another project
         other_project_response = auth_client.post(
@@ -255,7 +265,9 @@ class TestRolePolicyResource:
         data = get_response.get_json()
         assert len(data) == 0
 
-    def test_remove_non_existent_association(self, auth_client, project, role, policy):
+    def test_remove_non_existent_association(
+        self, auth_client, project, role, policy
+    ):
         """Test DELETE returns 404 when association doesn't exist"""
         # Don't create association, just try to delete
         response = auth_client.delete(
@@ -265,7 +277,9 @@ class TestRolePolicyResource:
         data = response.get_json()
         assert "not assigned" in data["error"].lower()
 
-    def test_remove_association_policy_not_found(self, auth_client, project, role):
+    def test_remove_association_policy_not_found(
+        self, auth_client, project, role
+    ):
         """Test DELETE returns 404 when policy doesn't exist"""
         fake_id = str(uuid.uuid4())
         response = auth_client.delete(
@@ -273,7 +287,9 @@ class TestRolePolicyResource:
         )
         assert response.status_code == 404
 
-    def test_remove_association_role_not_found(self, auth_client, project, policy):
+    def test_remove_association_role_not_found(
+        self, auth_client, project, policy
+    ):
         """Test DELETE returns 404 when role doesn't exist"""
         fake_role_id = str(uuid.uuid4())
         response = auth_client.delete(
@@ -288,7 +304,9 @@ class TestRolePolicyResource:
         policy_id = str(uuid.uuid4())
 
         # GET list
-        response = client.get(f"/projects/{project_id}/roles/{role_id}/policies")
+        response = client.get(
+            f"/projects/{project_id}/roles/{role_id}/policies"
+        )
         assert response.status_code == 401
 
         # POST create

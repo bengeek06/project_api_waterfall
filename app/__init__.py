@@ -19,6 +19,7 @@ Functions:
 
 import os
 import sys
+import traceback
 from sqlalchemy import inspect
 from flask import Flask, request, g, abort
 from flask_migrate import Migrate
@@ -192,8 +193,6 @@ def register_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_error(err):
-        import traceback
-
         # Log full traceback
         tb = traceback.format_exc()
         logger.error(

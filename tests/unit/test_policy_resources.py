@@ -93,7 +93,10 @@ class TestPolicyListResource:
 
     def test_create_policy_duplicate_name(self, auth_client, project):
         """Test POST /projects/{project_id}/policies with duplicate name returns 409"""
-        policy_data = {"name": "File Management", "description": "First policy"}
+        policy_data = {
+            "name": "File Management",
+            "description": "First policy",
+        }
 
         # Create first policy
         response = auth_client.post(
@@ -102,7 +105,10 @@ class TestPolicyListResource:
         assert response.status_code == 201
 
         # Try to create duplicate
-        duplicate_data = {"name": "File Management", "description": "Duplicate policy"}
+        duplicate_data = {
+            "name": "File Management",
+            "description": "Duplicate policy",
+        }
 
         response = auth_client.post(
             f"/projects/{project['id']}/policies", json=duplicate_data
@@ -117,7 +123,8 @@ class TestPolicyListResource:
         policy_data = {"name": "Test Policy"}
 
         response = auth_client.post(
-            "/projects/00000000-0000-0000-0000-000000000000/policies", json=policy_data
+            "/projects/00000000-0000-0000-0000-000000000000/policies",
+            json=policy_data,
         )
         assert response.status_code == 404
         data = response.get_json()
@@ -128,7 +135,10 @@ class TestPolicyListResource:
         """Test GET /projects/{project_id}/policies returns created policies"""
         # Create two policies
         policy1 = {"name": "File Management", "description": "File operations"}
-        policy2 = {"name": "Member Management", "description": "Member operations"}
+        policy2 = {
+            "name": "Member Management",
+            "description": "Member operations",
+        }
 
         auth_client.post(f"/projects/{project['id']}/policies", json=policy1)
         auth_client.post(f"/projects/{project['id']}/policies", json=policy2)
@@ -148,7 +158,10 @@ class TestPolicyResource:
     def test_get_policy(self, auth_client, project):
         """Test GET /projects/{project_id}/policies/{policy_id} returns policy details"""
         # Create a policy
-        policy_data = {"name": "File Management", "description": "File operations"}
+        policy_data = {
+            "name": "File Management",
+            "description": "File operations",
+        }
 
         create_response = auth_client.post(
             f"/projects/{project['id']}/policies", json=policy_data
@@ -156,7 +169,9 @@ class TestPolicyResource:
         policy = create_response.get_json()
 
         # Get the policy
-        response = auth_client.get(f"/projects/{project['id']}/policies/{policy['id']}")
+        response = auth_client.get(
+            f"/projects/{project['id']}/policies/{policy['id']}"
+        )
         assert response.status_code == 200
         data = response.get_json()
         assert data["id"] == policy["id"]
@@ -175,7 +190,10 @@ class TestPolicyResource:
     def test_update_policy_put(self, auth_client, project):
         """Test PUT /projects/{project_id}/policies/{policy_id} updates policy"""
         # Create a policy
-        policy_data = {"name": "File Management", "description": "Old description"}
+        policy_data = {
+            "name": "File Management",
+            "description": "Old description",
+        }
 
         create_response = auth_client.post(
             f"/projects/{project['id']}/policies", json=policy_data
@@ -189,7 +207,8 @@ class TestPolicyResource:
         }
 
         response = auth_client.put(
-            f"/projects/{project['id']}/policies/{policy['id']}", json=update_data
+            f"/projects/{project['id']}/policies/{policy['id']}",
+            json=update_data,
         )
         assert response.status_code == 200
         data = response.get_json()
@@ -199,7 +218,10 @@ class TestPolicyResource:
     def test_update_policy_patch(self, auth_client, project):
         """Test PATCH /projects/{project_id}/policies/{policy_id} partially updates policy"""
         # Create a policy
-        policy_data = {"name": "File Management", "description": "Original description"}
+        policy_data = {
+            "name": "File Management",
+            "description": "Original description",
+        }
 
         create_response = auth_client.post(
             f"/projects/{project['id']}/policies", json=policy_data
@@ -210,7 +232,8 @@ class TestPolicyResource:
         update_data = {"description": "Updated description"}
 
         response = auth_client.patch(
-            f"/projects/{project['id']}/policies/{policy['id']}", json=update_data
+            f"/projects/{project['id']}/policies/{policy['id']}",
+            json=update_data,
         )
         assert response.status_code == 200
         data = response.get_json()
@@ -237,7 +260,8 @@ class TestPolicyResource:
         update_data = {"name": "Policy 1"}
 
         response = auth_client.put(
-            f"/projects/{project['id']}/policies/{policy2['id']}", json=update_data
+            f"/projects/{project['id']}/policies/{policy2['id']}",
+            json=update_data,
         )
         assert response.status_code == 409
         data = response.get_json()
@@ -344,16 +368,20 @@ class TestPolicyResource:
 
         # PUT update
         response = client.put(
-            f"/projects/{project_id}/policies/{policy_id}", json={"name": "Test"}
+            f"/projects/{project_id}/policies/{policy_id}",
+            json={"name": "Test"},
         )
         assert response.status_code == 401
 
         # PATCH update
         response = client.patch(
-            f"/projects/{project_id}/policies/{policy_id}", json={"name": "Test"}
+            f"/projects/{project_id}/policies/{policy_id}",
+            json={"name": "Test"},
         )
         assert response.status_code == 401
 
         # DELETE
-        response = client.delete(f"/projects/{project_id}/policies/{policy_id}")
+        response = client.delete(
+            f"/projects/{project_id}/policies/{policy_id}"
+        )
         assert response.status_code == 401

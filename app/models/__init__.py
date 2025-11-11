@@ -5,7 +5,6 @@ app.models
 This module exports the models.
 """
 
-from app.models.dummy import Dummy
 from app.models.project import (
     Project,
     ProjectMember,
@@ -21,7 +20,6 @@ from app.models.project import (
 )
 
 __all__ = [
-    "Dummy",
     "Project",
     "ProjectMember",
     "Milestone",

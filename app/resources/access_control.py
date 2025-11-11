@@ -66,7 +66,9 @@ class CheckFileAccessResource(Resource):
 
         for check in file_checks:
             # Validate check structure
-            if not all(key in check for key in ["file_id", "project_id", "action"]):
+            if not all(
+                key in check for key in ["file_id", "project_id", "action"]
+            ):
                 results.append(
                     {
                         "file_id": check.get("file_id"),
@@ -120,7 +122,11 @@ class CheckFileAccessResource(Resource):
         """
         # 1. Verify project exists and belongs to company
         project = db.session.get(Project, project_id)
-        if not project or project.company_id != company_id or project.removed_at:
+        if (
+            not project
+            or project.company_id != company_id
+            or project.removed_at
+        ):
             return False
 
         # 2. Get user's membership in the project
@@ -216,7 +222,11 @@ class CheckProjectAccessResource(Resource):
             )
 
             results.append(
-                {"project_id": project_id, "action": action, "allowed": allowed}
+                {
+                    "project_id": project_id,
+                    "action": action,
+                    "allowed": allowed,
+                }
             )
 
         return {"results": results}, 200
@@ -243,7 +253,11 @@ class CheckProjectAccessResource(Resource):
         """
         # 1. Verify project exists and belongs to company
         project = db.session.get(Project, project_id)
-        if not project or project.company_id != company_id or project.removed_at:
+        if (
+            not project
+            or project.company_id != company_id
+            or project.removed_at
+        ):
             return False
 
         # 2. Get user's membership in the project

@@ -5,7 +5,6 @@ app.schemas
 This module exports Marshmallow schemas for the Project Service.
 """
 
-from app.schemas.dummy_schema import DummySchema
 from app.schemas.project_schema import (
     DeliverableCreateSchema,
     DeliverableSchema,
@@ -33,7 +32,6 @@ from app.schemas.project_schema import (
 )
 
 __all__ = [
-    "DummySchema",
     "ProjectSchema",
     "ProjectCreateSchema",
     "ProjectUpdateSchema",

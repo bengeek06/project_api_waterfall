@@ -14,7 +14,7 @@ Resources:
 - MilestoneDeliverableResource: DELETE (remove association)
 """
 
-from flask import g
+from flask import g, request
 from flask_restful import Resource
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.db import db
@@ -118,8 +118,6 @@ class MilestoneDeliverableListResource(Resource):
                 return {"error": "Milestone not found"}, 404
 
             # Get deliverable_id from request
-            from flask import request
-
             data = request.get_json()
             if not data or "deliverable_id" not in data:
                 return {
@@ -143,7 +141,9 @@ class MilestoneDeliverableListResource(Resource):
                 }, 404
 
             # Check if association already exists
-            existing = milestone.deliverables.filter_by(id=deliverable_id).first()
+            existing = milestone.deliverables.filter_by(
+                id=deliverable_id
+            ).first()
             if existing:
                 return {
                     "error": "Association already exists",
@@ -220,7 +220,9 @@ class MilestoneDeliverableResource(Resource):
                 return {"error": "Deliverable not found"}, 404
 
             # Check if association exists
-            existing = milestone.deliverables.filter_by(id=deliverable_id).first()
+            existing = milestone.deliverables.filter_by(
+                id=deliverable_id
+            ).first()
             if not existing:
                 return {
                     "error": "Association not found",

@@ -249,7 +249,9 @@ class DeliverableSchema(SQLAlchemyAutoSchema):
             "other",
         ]
         if value not in allowed_types:
-            raise ValidationError(f"Type must be one of: {', '.join(allowed_types)}")
+            raise ValidationError(
+                f"Type must be one of: {', '.join(allowed_types)}"
+            )
         return value
 
 

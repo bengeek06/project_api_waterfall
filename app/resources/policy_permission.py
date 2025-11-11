@@ -14,7 +14,7 @@ Resources:
 - PolicyPermissionResource: DELETE (remove association)
 """
 
-from flask import g
+from flask import g, request
 from flask_restful import Resource
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.db import db
@@ -43,7 +43,11 @@ class PolicyPermissionListResource(Resource):
 
         # Verify project exists and belongs to company
         project = db.session.get(Project, project_id)
-        if not project or project.company_id != company_id or project.removed_at:
+        if (
+            not project
+            or project.company_id != company_id
+            or project.removed_at
+        ):
             return {"error": "Project not found"}, 404
 
         # Verify policy exists and belongs to project
@@ -67,13 +71,15 @@ class PolicyPermissionListResource(Resource):
 
         Expects JSON body: {"permission_id": "uuid"}
         """
-        from flask import request
-
         company_id = g.company_id
 
         # Verify project exists and belongs to company
         project = db.session.get(Project, project_id)
-        if not project or project.company_id != company_id or project.removed_at:
+        if (
+            not project
+            or project.company_id != company_id
+            or project.removed_at
+        ):
             return {"error": "Project not found"}, 404
 
         # Verify policy exists and belongs to project
@@ -99,7 +105,9 @@ class PolicyPermissionListResource(Resource):
 
         # Check if association already exists
         if permission in policy.permissions:
-            return {"error": "Permission is already assigned to this policy"}, 409
+            return {
+                "error": "Permission is already assigned to this policy"
+            }, 409
 
         try:
             # Add the association
@@ -137,7 +145,11 @@ class PolicyPermissionResource(Resource):
 
         # Verify project exists and belongs to company
         project = db.session.get(Project, project_id)
-        if not project or project.company_id != company_id or project.removed_at:
+        if (
+            not project
+            or project.company_id != company_id
+            or project.removed_at
+        ):
             return {"error": "Project not found"}, 404
 
         # Verify policy exists and belongs to project

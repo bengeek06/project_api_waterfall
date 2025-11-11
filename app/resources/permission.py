@@ -74,7 +74,9 @@ class PermissionListResource(Resource):
             # Get all permissions for project (filter soft-deleted)
             permissions = (
                 ProjectPermission.query.filter_by(
-                    project_id=project_id, company_id=company_id, removed_at=None
+                    project_id=project_id,
+                    company_id=company_id,
+                    removed_at=None,
                 )
                 .order_by(ProjectPermission.category, ProjectPermission.name)
                 .all()
@@ -84,7 +86,10 @@ class PermissionListResource(Resource):
             return schema.dump(permissions), 200
 
         except Exception as e:
-            return {"error": "Failed to retrieve permissions", "detail": str(e)}, 500
+            return {
+                "error": "Failed to retrieve permissions",
+                "detail": str(e),
+            }, 500
 
 
 def seed_project_permissions(project_id, company_id):

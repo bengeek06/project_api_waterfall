@@ -42,7 +42,9 @@ def project(auth_client):
 def milestone(auth_client, project):
     """Create a test milestone."""
     payload = {"name": "Milestone 1", "description": "Test milestone"}
-    response = auth_client.post(f"/projects/{project['id']}/milestones", json=payload)
+    response = auth_client.post(
+        f"/projects/{project['id']}/milestones", json=payload
+    )
     assert response.status_code == 201
     return response.get_json()
 
@@ -51,7 +53,9 @@ def milestone(auth_client, project):
 def deliverable(auth_client, project):
     """Create a test deliverable."""
     payload = {"name": "Deliverable 1", "description": "Test deliverable"}
-    response = auth_client.post(f"/projects/{project['id']}/deliverables", json=payload)
+    response = auth_client.post(
+        f"/projects/{project['id']}/deliverables", json=payload
+    )
     assert response.status_code == 201
     return response.get_json()
 
@@ -203,7 +207,9 @@ class TestMilestoneDeliverableListResource:
         )
         assert response.status_code == 404
 
-    def test_multiple_deliverables_association(self, auth_client, project, milestone):
+    def test_multiple_deliverables_association(
+        self, auth_client, project, milestone
+    ):
         """Test that a milestone can have multiple deliverables"""
         # Create two deliverables
         deliverable1_response = auth_client.post(
@@ -242,7 +248,9 @@ class TestMilestoneDeliverableListResource:
 class TestMilestoneDeliverableResource:
     """Tests for MilestoneDeliverableResource (DELETE)"""
 
-    def test_remove_association(self, auth_client, project, milestone, deliverable):
+    def test_remove_association(
+        self, auth_client, project, milestone, deliverable
+    ):
         """Test DELETE removes association between milestone and deliverable"""
         # Create association
         auth_client.post(

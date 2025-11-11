@@ -93,7 +93,9 @@ class TestPermissionListResource:
 
         # Count by category
         file_ops = [p for p in data if p["category"] == "file_operations"]
-        project_ops = [p for p in data if p["category"] == "project_operations"]
+        project_ops = [
+            p for p in data if p["category"] == "project_operations"
+        ]
         member_ops = [p for p in data if p["category"] == "member_operations"]
 
         assert len(file_ops) == 5
@@ -133,7 +135,9 @@ class TestPermissionListResource:
             i for i, cat in enumerate(categories) if cat == "member_operations"
         ]
         project_ops_indices = [
-            i for i, cat in enumerate(categories) if cat == "project_operations"
+            i
+            for i, cat in enumerate(categories)
+            if cat == "project_operations"
         ]
 
         if file_ops_indices and member_ops_indices:
@@ -144,7 +148,8 @@ class TestPermissionListResource:
     def test_post_not_allowed(self, auth_client, project):
         """Test POST /projects/{project_id}/permissions returns 405 Method Not Allowed"""
         response = auth_client.post(
-            f"/projects/{project['id']}/permissions", json={"name": "test_permission"}
+            f"/projects/{project['id']}/permissions",
+            json={"name": "test_permission"},
         )
         assert response.status_code == 405  # Method Not Allowed
 
