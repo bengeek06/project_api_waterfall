@@ -309,7 +309,7 @@ class ProjectRoleCreateSchema(SQLAlchemyAutoSchema):
         """Meta configuration for ProjectRoleCreateSchema."""
 
         model = ProjectRole
-        load_instance = True
+        load_instance = False
         include_fk = True
         exclude = ("id", "created_at", "updated_at", "removed_at")
 

@@ -25,6 +25,10 @@ from app.resources.member import (
     MemberListResource,
     MemberResource,
 )
+from app.resources.role import (
+    RoleListResource,
+    RoleResource,
+)
 
 
 def register_routes(app):
@@ -65,9 +69,7 @@ def register_routes(app):
         DeliverableListResource,
         "/projects/<string:project_id>/deliverables",
     )
-    api.add_resource(
-        DeliverableResource, "/deliverables/<string:deliverable_id>"
-    )
+    api.add_resource(DeliverableResource, "/deliverables/<string:deliverable_id>")
 
     # Member endpoints
     api.add_resource(
@@ -77,6 +79,16 @@ def register_routes(app):
     api.add_resource(
         MemberResource,
         "/projects/<string:project_id>/members/<string:user_id>",
+    )
+
+    # Role endpoints
+    api.add_resource(
+        RoleListResource,
+        "/projects/<string:project_id>/roles",
+    )
+    api.add_resource(
+        RoleResource,
+        "/projects/<string:project_id>/roles/<string:role_id>",
     )
 
     logger.info("Routes registered successfully.")
