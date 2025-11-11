@@ -36,6 +36,10 @@ from app.resources.policy import (
 from app.resources.permission import (
     PermissionListResource,
 )
+from app.resources.milestone_deliverable import (
+    MilestoneDeliverableListResource,
+    MilestoneDeliverableResource,
+)
 
 
 def register_routes(app):
@@ -112,6 +116,16 @@ def register_routes(app):
     api.add_resource(
         PermissionListResource,
         "/projects/<string:project_id>/permissions",
+    )
+
+    # Milestone-Deliverable association endpoints
+    api.add_resource(
+        MilestoneDeliverableListResource,
+        "/projects/<string:project_id>/milestones/<string:milestone_id>/deliverables",
+    )
+    api.add_resource(
+        MilestoneDeliverableResource,
+        "/projects/<string:project_id>/milestones/<string:milestone_id>/deliverables/<string:deliverable_id>",
     )
 
     logger.info("Routes registered successfully.")
