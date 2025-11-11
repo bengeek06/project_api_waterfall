@@ -99,10 +99,12 @@ class ProjectCreateSchema(SQLAlchemyAutoSchema):
         """Meta configuration for ProjectCreateSchema."""
 
         model = Project
-        load_instance = True
+        load_instance = False  # Don't try to load instance, just validate data
         include_fk = True
         exclude = (
             "id",
+            "company_id",  # Set from JWT, not from request
+            "created_by",  # Set from JWT, not from request
             "created_at",
             "updated_at",
             "removed_at",

@@ -192,14 +192,29 @@ def register_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_error(err):
+        import traceback
+        
+        # Log full traceback
+        tb = traceback.format_exc()
         logger.error(
             "Internal server error",
-            str(err),
+            error=str(err),
+            traceback=tb,
             exc_info=True,
             path=request.path,
             method=request.method,
             request_id=getattr(g, "request_id", None),
         )
+        
+        # Print to console for debugging
+        print(f"\n{'='*80}")
+        print(f"ERROR 500: {err}")
+        print(f"Path: {request.path}")
+        print(f"Method: {request.method}")
+        print("\nFull Traceback:")
+        print(tb)
+        print(f"{'='*80}\n")
+        
         response = {
             "message": "Internal server error",
             "path": request.path,
@@ -207,8 +222,9 @@ def register_error_handlers(app):
             "request_id": getattr(g, "request_id", None),
         }
 
-        if app.config.get("DEBUG"):
+        if app.config.get("DEBUG") or app.config.get("TESTING"):
             response["exception"] = str(err)
+            response["traceback"] = tb
         return response, 500
 
     logger.info("Error handlers registered successfully.")

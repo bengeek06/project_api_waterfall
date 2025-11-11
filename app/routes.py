@@ -12,6 +12,7 @@ from app.resources.dummy import DummyResource, DummyListResource
 from app.resources.version import VersionResource
 from app.resources.config import ConfigResource
 from app.resources.health import HealthResource
+from app.resources.project import ProjectListResource, ProjectResource
 
 
 def register_routes(app):
@@ -27,11 +28,17 @@ def register_routes(app):
     """
     api = Api(app)
 
+    # System endpoints
+    api.add_resource(HealthResource, "/health")
+    api.add_resource(VersionResource, "/version")
+    api.add_resource(ConfigResource, "/config")
+
+    # Legacy dummy endpoints (to be removed)
     api.add_resource(DummyListResource, "/dummies")
     api.add_resource(DummyResource, "/dummies/<int:dummy_id>")
 
-    api.add_resource(VersionResource, "/version")
-    api.add_resource(ConfigResource, "/config")
-    api.add_resource(HealthResource, "/health")
+    # Project endpoints
+    api.add_resource(ProjectListResource, "/projects")
+    api.add_resource(ProjectResource, "/projects/<string:project_id>")
 
     logger.info("Routes registered successfully.")
