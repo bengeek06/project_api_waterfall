@@ -44,6 +44,10 @@ from app.resources.role_policy import (
     RolePolicyListResource,
     RolePolicyResource,
 )
+from app.resources.policy_permission import (
+    PolicyPermissionListResource,
+    PolicyPermissionResource,
+)
 
 
 def register_routes(app):
@@ -140,6 +144,16 @@ def register_routes(app):
     api.add_resource(
         RolePolicyResource,
         "/projects/<string:project_id>/roles/<string:role_id>/policies/<string:policy_id>",
+    )
+
+    # Policy-Permission association endpoints
+    api.add_resource(
+        PolicyPermissionListResource,
+        "/projects/<string:project_id>/policies/<string:policy_id>/permissions",
+    )
+    api.add_resource(
+        PolicyPermissionResource,
+        "/projects/<string:project_id>/policies/<string:policy_id>/permissions/<string:permission_id>",
     )
 
     logger.info("Routes registered successfully.")
