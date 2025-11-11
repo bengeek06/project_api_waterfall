@@ -48,6 +48,10 @@ from app.resources.policy_permission import (
     PolicyPermissionListResource,
     PolicyPermissionResource,
 )
+from app.resources.access_control import (
+    CheckFileAccessResource,
+    CheckProjectAccessResource,
+)
 
 
 def register_routes(app):
@@ -155,5 +159,9 @@ def register_routes(app):
         PolicyPermissionResource,
         "/projects/<string:project_id>/policies/<string:policy_id>/permissions/<string:permission_id>",
     )
+
+    # Access Control endpoints
+    api.add_resource(CheckFileAccessResource, "/check-file-access")
+    api.add_resource(CheckProjectAccessResource, "/check-project-access")
 
     logger.info("Routes registered successfully.")
