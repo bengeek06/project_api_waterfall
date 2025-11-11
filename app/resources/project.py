@@ -41,9 +41,7 @@ class ProjectListResource(BaseResource):
         try:
             company_id = str(uuid.UUID(g.company_id))
 
-            projects = Project.query.filter(
-                Project.company_id == company_id
-            ).all()
+            projects = Project.query.filter(Project.company_id == company_id).all()
 
             # Filter out soft-deleted projects
             projects = [p for p in projects if not p.removed_at]
@@ -65,9 +63,7 @@ class ProjectListResource(BaseResource):
             data = request.get_json()
 
             # Security: check if client tries to override JWT parameters
-            if "company_id" in data and str(data["company_id"]) != str(
-                company_id
-            ):
+            if "company_id" in data and str(data["company_id"]) != str(company_id):
                 logger.warning(
                     "Security: Client attempted to override company_id",
                     jwt_company_id=str(company_id),
@@ -134,20 +130,14 @@ class ProjectListResource(BaseResource):
                     else None
                 ),
                 "contract_amount": (
-                    float(project.contract_amount)
-                    if project.contract_amount
-                    else None
+                    float(project.contract_amount) if project.contract_amount else None
                 ),
                 "budget_currency": project.budget_currency,
                 "created_at": (
-                    project.created_at.isoformat()
-                    if project.created_at
-                    else None
+                    project.created_at.isoformat() if project.created_at else None
                 ),
                 "updated_at": (
-                    project.updated_at.isoformat()
-                    if project.updated_at
-                    else None
+                    project.updated_at.isoformat() if project.updated_at else None
                 ),
             }
             return result, 201
@@ -250,19 +240,21 @@ class ProjectResource(BaseResource):
                         changes[field] = {"from": old_value, "to": value}
                         setattr(project, field, value)
 
+            # Seed permissions when project transitions to 'initialized'
+            if "status" in changes and changes["status"]["to"] == "initialized":
+                from app.resources.permission import seed_project_permissions
+
+                seed_project_permissions(project.id, company_id)
+
             # Create history entries for each changed field
             if changes:
                 action = "status_changed" if "status" in changes else "updated"
                 for field_name, change in changes.items():
                     # Convert values to string for storage
                     old_val = (
-                        str(change["from"])
-                        if change["from"] is not None
-                        else None
+                        str(change["from"]) if change["from"] is not None else None
                     )
-                    new_val = (
-                        str(change["to"]) if change["to"] is not None else None
-                    )
+                    new_val = str(change["to"]) if change["to"] is not None else None
 
                     history = ProjectHistory(
                         project_id=project.id,

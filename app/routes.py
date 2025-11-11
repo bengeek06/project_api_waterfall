@@ -33,6 +33,9 @@ from app.resources.policy import (
     PolicyListResource,
     PolicyResource,
 )
+from app.resources.permission import (
+    PermissionListResource,
+)
 
 
 def register_routes(app):
@@ -103,6 +106,12 @@ def register_routes(app):
     api.add_resource(
         PolicyResource,
         "/projects/<string:project_id>/policies/<string:policy_id>",
+    )
+
+    # Permission endpoints (read-only)
+    api.add_resource(
+        PermissionListResource,
+        "/projects/<string:project_id>/permissions",
     )
 
     logger.info("Routes registered successfully.")
