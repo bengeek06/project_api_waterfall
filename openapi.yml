@@ -1,31 +1,55 @@
 openapi: 3.0.3
 info:
-  title: Flask template API
+  title: Waterfall Project Service API
   version: 0.0.1
   description: |
-    Flask API Template is a ready-to-use Flask microservice template
-    designed to accelerate the development of RESTful microservices.
+    **Waterfall Project Service API** manages the entire lifecycle of projects within the Waterfall platform,
+    from initial consultation through delivery and archival.
 
-    Template Features:
-    - REST Architecture: Modular and organized project structure
-    - Database Management: SQLAlchemy with Alembic migrations
-    - Data Validation: Marshmallow schemas for serialization/deserialization
-    - Flexible Configuration: Multi-environment support (dev, test, staging, production)
-    - Monitoring: Health check and version endpoints
-    - Containerization: Ready-to-use Docker configuration
-    - Testing: Test structure with pytest and coverage
-    - Documentation: Integrated OpenAPI/Swagger
-    - Logging: Configurable logging system
+    ## Key Features
+
+    ### Project Lifecycle Management
+    - Complete lifecycle tracking: consultation → active → completed → archived
+    - Status transitions: created, initialized, consultation, lost, active, suspended, completed, archived
+    - Comprehensive date tracking for all project phases
+
+    ### Project Components
+    - **Projects**: Main project entities with contractual and timeline information
+    - **Milestones**: Key project checkpoints with delivery dates
+    - **Deliverables**: Specific outputs associated with milestones
+    - **Members**: Team members with role-based access
+
+    ### Role-Based Access Control (RBAC)
+    - **Project-level RBAC**: Context-specific permissions for project resources
+    - **Default Roles**: owner, validator, contributor, viewer (created automatically)
+    - **Custom Roles**: User-defined roles with configurable permissions
+    - **Policies**: Groups of permissions for organized access management
+    - **Permissions**: Granular control (read_files, write_files, validate_files, etc.)
+
+    ### Integration with Waterfall Ecosystem
+    - **Storage Service**: File access validation via check-file-access endpoints
+    - **Task Service**: WBS structure provisioning for project execution
+    - **Identity Service**: User and customer management integration
+    - **Guardian Service**: Endpoint-level RBAC enforcement
+
+    ### Multi-tenancy
+    - Company-level isolation for all resources
+    - Automatic company_id extraction from JWT tokens
+
+    ## Authentication
+    All endpoints (except /health) require JWT authentication via HTTP-only cookies.
     
-    This template allows you to quickly start developing a new microservice
-    by providing a solid foundation and ready-to-use best practices.
+    ## Architecture
+    This service follows a microservices architecture with clear separation between:
+    - Guardian: Endpoint-level access control (who can call which endpoints)
+    - Project Service: Context-level access control (who can access which projects/files)
 
   contact:
-      name: Flask template API Support
-      email: contact@waterfall-project.pro
+    name: Waterfall Project Service Support
+    email: contact@waterfall-project.pro
   license:
     name: AGPL v3 / Commercial
-    url: https://github.com/bengeek06/flask_api_template/blob/main/LICENSE
+    url: https://github.com/bengeek06/project_api_waterfall/blob/main/LICENSE
 
 servers:
   - url: http://localhost:5002
@@ -46,25 +70,531 @@ components:
 
   schemas:
 
-    Dummy:
+    # ==================== PROJECT SCHEMAS ====================
+
+    Project:
       type: object
       required:
+        - id
         - name
+        - company_id
+        - created_by
+        - status
+        - created_at
+        - updated_at
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           readOnly: true
-          description: Unique identifier of the dummy
+          description: Unique identifier of the project
+        name:
+          type: string
+          maxLength: 200
+          description: Name of the project
+        description:
+          type: string
+          description: Detailed description of the project
+        company_id:
+          type: string
+          format: uuid
+          description: Company owning the project (multi-tenant isolation)
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Customer for which the project is executed
+        created_by:
+          type: string
+          format: uuid
+          description: User ID who created the project
+        status:
+          type: string
+          enum: [created, initialized, consultation, lost, active, suspended, completed, archived]
+          description: Current lifecycle status of the project
+        consultation_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date when consultation phase started
+        submission_deadline:
+          type: string
+          format: date
+          nullable: true
+          description: Deadline for proposal submission
+        notification_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date when decision was notified (won/lost)
+        contract_start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Official contract start date
+        planned_start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Planned project start date
+        actual_start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Actual project start date
+        contract_delivery_date:
+          type: string
+          format: date
+          nullable: true
+          description: Contractual delivery date
+        planned_delivery_date:
+          type: string
+          format: date
+          nullable: true
+          description: Internally planned delivery date
+        actual_delivery_date:
+          type: string
+          format: date
+          nullable: true
+          description: Actual delivery date
+        contract_amount:
+          type: number
+          format: float
+          nullable: true
+          description: Total contract amount
+        budget_currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          nullable: true
+          description: Currency code (ISO 4217 - EUR, USD, etc.)
+        suspended_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when project was suspended
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when project was completed
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when project was archived
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Last update timestamp
+
+    ProjectCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          description: Name of the project
+        description:
+          type: string
+          description: Detailed description of the project
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Customer for which the project is executed
+        consultation_date:
+          type: string
+          format: date
+          nullable: true
+        submission_deadline:
+          type: string
+          format: date
+          nullable: true
+        contract_amount:
+          type: number
+          format: float
+          minimum: 0
+          nullable: true
+        budget_currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          nullable: true
+
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum: [created, initialized, consultation, lost, active, suspended, completed, archived]
+        consultation_date:
+          type: string
+          format: date
+          nullable: true
+        submission_deadline:
+          type: string
+          format: date
+          nullable: true
+        notification_date:
+          type: string
+          format: date
+          nullable: true
+        contract_start_date:
+          type: string
+          format: date
+          nullable: true
+        planned_start_date:
+          type: string
+          format: date
+          nullable: true
+        actual_start_date:
+          type: string
+          format: date
+          nullable: true
+        contract_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        planned_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        actual_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        contract_amount:
+          type: number
+          format: float
+          minimum: 0
+          nullable: true
+        budget_currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          nullable: true
+
+    ProjectMetadata:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - company_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          type: string
+          enum: [created, initialized, consultation, lost, active, suspended, completed, archived]
+        company_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    # ==================== MILESTONE SCHEMAS ====================
+
+    Milestone:
+      type: object
+      required:
+        - id
+        - project_id
+        - name
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, delayed, cancelled]
+        order:
+          type: integer
+          minimum: 1
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    MilestoneCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, delayed, cancelled]
+          default: planned
+        order:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    MilestoneUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, delayed, cancelled]
+        order:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    # ==================== DELIVERABLE SCHEMAS ====================
+
+    Deliverable:
+      type: object
+      required:
+        - id
+        - project_id
+        - name
+        - type
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        type:
+          type: string
+          enum: [document, software, hardware, service, other]
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, delayed, cancelled]
+        order:
+          type: integer
+          minimum: 1
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    DeliverableCreate:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        type:
+          type: string
+          enum: [document, software, hardware, service, other]
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, delayed, cancelled]
+          default: planned
+        order:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    DeliverableUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        type:
+          type: string
+          enum: [document, software, hardware, service, other]
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, delayed, cancelled]
+        order:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    # ==================== MEMBER SCHEMAS ====================
+
+    ProjectMember:
+      type: object
+      required:
+        - id
+        - project_id
+        - user_id
+        - role_id
+        - added_by
+        - added_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        role_id:
+          type: string
+          format: uuid
+        added_by:
+          type: string
+          format: uuid
+        added_at:
+          type: string
+          format: date-time
+          readOnly: true
+        removed_at:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+
+    ProjectMemberCreate:
+      type: object
+      required:
+        - user_id
+        - role_id
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        role_id:
+          type: string
+          format: uuid
+
+    ProjectMemberUpdate:
+      type: object
+      properties:
+        role_id:
+          type: string
+          format: uuid
+
+    # ==================== ROLE SCHEMAS ====================
+
+    ProjectRole:
+      type: object
+      required:
+        - id
+        - project_id
+        - name
+        - is_default
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
         name:
           type: string
           maxLength: 50
-          description: Name of the dummy entity
         description:
           type: string
           maxLength: 200
-          description: Optional description of the dummy entity
+          nullable: true
+        is_default:
+          type: boolean
+          description: Whether this is a default role (owner, validator, contributor, viewer)
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
 
-    DummyCreate:
+    ProjectRoleCreate:
       type: object
       required:
         - name
@@ -72,23 +602,360 @@ components:
         name:
           type: string
           maxLength: 50
-          description: Name of the dummy entity
         description:
           type: string
           maxLength: 200
-          description: Optional description of the dummy entity
+          nullable: true
 
-    DummyUpdate:
+    ProjectRoleUpdate:
       type: object
       properties:
         name:
           type: string
           maxLength: 50
-          description: Name of the dummy entity
         description:
           type: string
           maxLength: 200
-          description: Optional description of the dummy entity
+          nullable: true
+
+    # ==================== POLICY SCHEMAS ====================
+
+    ProjectPolicy:
+      type: object
+      required:
+        - id
+        - project_id
+        - name
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    ProjectPolicyCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    ProjectPolicyUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    # ==================== PERMISSION SCHEMAS ====================
+
+    ProjectPermission:
+      type: object
+      required:
+        - id
+        - name
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          enum: [read_files, write_files, delete_files, lock_files, validate_files, update_project, delete_project, manage_members, manage_roles, manage_policies]
+        description:
+          type: string
+        category:
+          type: string
+          enum: [files, project, members, rbac]
+
+    # ==================== ASSOCIATION SCHEMAS ====================
+
+    MilestoneDeliverableAssociation:
+      type: object
+      required:
+        - milestone_id
+        - deliverable_id
+        - created_at
+      properties:
+        milestone_id:
+          type: string
+          format: uuid
+        deliverable_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    RolePolicyAssociation:
+      type: object
+      required:
+        - role_id
+        - policy_id
+      properties:
+        role_id:
+          type: string
+          format: uuid
+        policy_id:
+          type: string
+          format: uuid
+        associated:
+          type: boolean
+          description: Whether the association exists
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    PolicyPermissionAssociation:
+      type: object
+      required:
+        - policy_id
+        - permission_id
+      properties:
+        policy_id:
+          type: string
+          format: uuid
+        permission_id:
+          type: string
+          format: uuid
+        associated:
+          type: boolean
+          description: Whether the association exists
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    # ==================== ACCESS CONTROL SCHEMAS ====================
+
+    FileAccessRequest:
+      type: object
+      required:
+        - project_id
+        - action
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [read, write, delete, lock, validate]
+          description: Action to perform on files (maps to permissions)
+
+    FileAccessResponse:
+      type: object
+      required:
+        - allowed
+      properties:
+        allowed:
+          type: boolean
+        role:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+
+    FileAccessBatchRequest:
+      type: object
+      required:
+        - checks
+      properties:
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileAccessRequest'
+
+    FileAccessBatchResponse:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              project_id:
+                type: string
+                format: uuid
+              action:
+                type: string
+              allowed:
+                type: boolean
+              role:
+                type: string
+                nullable: true
+              reason:
+                type: string
+                nullable: true
+
+    ProjectAccessRequest:
+      type: object
+      required:
+        - project_id
+        - action
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [read, write, manage]
+
+    ProjectAccessResponse:
+      type: object
+      required:
+        - allowed
+      properties:
+        allowed:
+          type: boolean
+        role:
+          type: string
+          nullable: true
+        project_status:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+
+    ProjectAccessBatchRequest:
+      type: object
+      required:
+        - checks
+      properties:
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAccessRequest'
+
+    ProjectAccessBatchResponse:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              project_id:
+                type: string
+                format: uuid
+              action:
+                type: string
+              allowed:
+                type: boolean
+              role:
+                type: string
+                nullable: true
+              project_status:
+                type: string
+                nullable: true
+              reason:
+                type: string
+                nullable: true
+
+    # ==================== WBS STRUCTURE SCHEMA ====================
+
+    WBSStructure:
+      type: object
+      required:
+        - project
+        - milestones
+        - deliverables
+        - associations
+      properties:
+        project:
+          $ref: '#/components/schemas/ProjectMetadata'
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+        deliverables:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deliverable'
+        associations:
+          type: array
+          items:
+            $ref: '#/components/schemas/MilestoneDeliverableAssociation'
+
+    # ==================== HISTORY SCHEMA ====================
+
+    HistoryEntry:
+      type: object
+      required:
+        - id
+        - project_id
+        - user_id
+        - action
+        - entity_type
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          description: Action performed (status_changed, member_added, etc.)
+        entity_type:
+          type: string
+          description: Type of entity affected (project, member, milestone, etc.)
+        entity_id:
+          type: string
+          format: uuid
+          nullable: true
+        changes:
+          type: object
+          description: JSON object containing details of the changes
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    # ==================== COMMON SCHEMAS ====================
 
     ErrorResponse:
       type: object
@@ -111,13 +978,13 @@ components:
           enum: [healthy, unhealthy]
         service:
           type: string
-          example: template_service
+          example: project_service
         timestamp:
           type: string
           format: date-time
         version:
           type: string
-          example: "1.0.0"
+          example: "0.0.1"
         environment:
           type: string
           enum: [development, testing, staging, production]
@@ -135,14 +1002,12 @@ components:
                   type: number
                   format: float
 
-
-
     VersionResponse:
       type: object
       properties:
         version:
           type: string
-          example: "1.0.0"
+          example: "0.0.1"
       required:
         - version
 
@@ -158,48 +1023,345 @@ components:
           type: string
           description: Database connection URL (sensitive info masked)
 
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
   responses:
 
-    DummyCreated:
-      description: Dummy created successfully
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Dummy'
+    # ==================== PROJECT RESPONSES ====================
 
-    DummyList:
-      description: List of dummies
+    ProjectList:
+      description: List of projects
       content:
         application/json:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/Dummy'
+              $ref: '#/components/schemas/Project'
 
-    DummyDetails:
-      description: Dummy details
+    ProjectCreated:
+      description: Project created successfully
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Dummy'
+            $ref: '#/components/schemas/Project'
 
-    DummyUpdated:
-      description: Dummy updated successfully
+    ProjectDetails:
+      description: Project details
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Dummy'
+            $ref: '#/components/schemas/Project'
 
-    DummyDeleted:
-      description: Dummy deleted successfully
+    ProjectUpdated:
+      description: Project updated successfully
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: "Dummy deleted successfully"
+            $ref: '#/components/schemas/Project'
+
+    ProjectDeleted:
+      description: Project deleted successfully
+
+    ProjectMetadataResponse:
+      description: Project metadata
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectMetadata'
+
+    ProjectArchived:
+      description: Project archived successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Project'
+
+    ProjectRestored:
+      description: Project restored successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Project'
+
+    ProjectHistory:
+      description: Project history entries
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/HistoryEntry'
+
+    WBSStructureResponse:
+      description: WBS structure for Task Service integration
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WBSStructure'
+
+    # ==================== MILESTONE RESPONSES ====================
+
+    MilestoneList:
+      description: List of milestones
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Milestone'
+
+    MilestoneCreated:
+      description: Milestone created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Milestone'
+
+    MilestoneDetails:
+      description: Milestone details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Milestone'
+
+    MilestoneUpdated:
+      description: Milestone updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Milestone'
+
+    MilestoneDeleted:
+      description: Milestone deleted successfully
+
+    # ==================== DELIVERABLE RESPONSES ====================
+
+    DeliverableList:
+      description: List of deliverables
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Deliverable'
+
+    DeliverableCreated:
+      description: Deliverable created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Deliverable'
+
+    DeliverableDetails:
+      description: Deliverable details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Deliverable'
+
+    DeliverableUpdated:
+      description: Deliverable updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Deliverable'
+
+    DeliverableDeleted:
+      description: Deliverable deleted successfully
+
+    # ==================== MEMBER RESPONSES ====================
+
+    MemberList:
+      description: List of project members
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProjectMember'
+
+    MemberCreated:
+      description: Member added successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectMember'
+
+    MemberDetails:
+      description: Member details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectMember'
+
+    MemberUpdated:
+      description: Member updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectMember'
+
+    MemberDeleted:
+      description: Member removed successfully
+
+    # ==================== ROLE RESPONSES ====================
+
+    RoleList:
+      description: List of project roles
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProjectRole'
+
+    RoleCreated:
+      description: Role created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+
+    RoleDetails:
+      description: Role details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+
+    RoleUpdated:
+      description: Role updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+
+    RoleDeleted:
+      description: Role deleted successfully
+
+    # ==================== POLICY RESPONSES ====================
+
+    PolicyList:
+      description: List of project policies
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProjectPolicy'
+
+    PolicyCreated:
+      description: Policy created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectPolicy'
+
+    PolicyDetails:
+      description: Policy details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectPolicy'
+
+    PolicyUpdated:
+      description: Policy updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectPolicy'
+
+    PolicyDeleted:
+      description: Policy deleted successfully
+
+    # ==================== PERMISSION RESPONSES ====================
+
+    PermissionList:
+      description: List of available permissions
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProjectPermission'
+
+    # ==================== ASSOCIATION RESPONSES ====================
+
+    AssociationCreated:
+      description: Association created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponse'
+
+    AssociationDeleted:
+      description: Association deleted successfully
+
+    RolePolicyDetails:
+      description: Role-Policy association details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RolePolicyAssociation'
+
+    PolicyPermissionDetails:
+      description: Policy-Permission association details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PolicyPermissionAssociation'
+
+    MilestoneDeliverableCreated:
+      description: Milestone-Deliverable association created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MilestoneDeliverableAssociation'
+
+    MilestoneDeliverableDetails:
+      description: Milestone-Deliverable association details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MilestoneDeliverableAssociation'
+
+    # ==================== ACCESS CONTROL RESPONSES ====================
+
+    FileAccessAllowed:
+      description: File access check result
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileAccessResponse'
+
+    FileAccessBatchResult:
+      description: Batch file access check results
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileAccessBatchResponse'
+
+    ProjectAccessAllowed:
+      description: Project access check result
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectAccessResponse'
+
+    ProjectAccessBatchResult:
+      description: Batch project access check results
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectAccessBatchResponse'
+
+    # ==================== COMMON RESPONSES ====================
 
     Unauthorized:
       description: Missing, invalid, or expired JWT token
@@ -218,9 +1380,11 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
           example:
             message: "Invalid input data"
+            errors:
+              name: "Name is required"
 
     NotFound:
-      description: Resource not found within company context
+      description: Resource not found
       content:
         application/json:
           schema:
@@ -255,126 +1419,25 @@ components:
           example:
             message: "Access denied - insufficient permissions"
 
+    BadGateway:
+      description: External service unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Cannot verify user existence: Identity Service unavailable"
+
+    ServiceUnavailable:
+      description: Service temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthResponse'
 
 paths:
 
-  /dummies:
-    get:
-      tags: [Dummy]
-      summary: List all dummies
-      description: Returns the list of all dummy entities
-      responses:
-        '200':
-          $ref: '#/components/responses/DummyList'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    post:
-      tags: [Dummy]
-      summary: Create a new dummy
-      description: Creates a new dummy entity with the provided data
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DummyCreate'
-      responses:
-        '201':
-          $ref: '#/components/responses/DummyCreated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /dummies/{dummy_id}:
-    parameters:
-      - name: dummy_id
-        in: path
-        required: true
-        schema:
-          type: integer
-        description: Unique identifier of the dummy
-
-    get:
-      tags: [Dummy]
-      summary: Get a dummy by ID
-      description: Returns details of a specific dummy entity
-      responses:
-        '200':
-          $ref: '#/components/responses/DummyDetails'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    put:
-      tags: [Dummy]
-      summary: Update a dummy
-      description: Fully updates an existing dummy entity
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DummyUpdate'
-      responses:
-        '200':
-          $ref: '#/components/responses/DummyUpdated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    patch:
-      tags: [Dummy]
-      summary: Partially update a dummy
-      description: Partially updates an existing dummy entity
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DummyUpdate'
-      responses:
-        '200':
-          $ref: '#/components/responses/DummyUpdated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    delete:
-      tags: [Dummy]
-      summary: Delete a dummy
-      description: Deletes an existing dummy entity
-      responses:
-        '204':
-          $ref: '#/components/responses/DummyDeleted'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+  # ==================== SYSTEM ENDPOINTS ====================
 
   /health:
     get:
@@ -390,17 +1453,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
         '503':
-          description: Service is unhealthy
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthResponse'
+          $ref: '#/components/responses/ServiceUnavailable'
 
   /version:
     get:
       tags: [System]
       summary: Get API version
-      description: Returns the current version of the identity Service API
+      description: Returns the current version of the Project Service API
       responses:
         '200':
           description: API version information
@@ -430,11 +1489,1522 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  # ==================== PROJECT ENDPOINTS ====================
 
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List all projects
+      description: Returns all projects for the authenticated user's company
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
+    post:
+      tags: [Projects]
+      summary: Create a new project
+      description: Creates a new project with initial status 'created'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/ProjectCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Projects]
+      summary: Get a project by ID
+      description: Returns detailed information about a specific project
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Projects]
+      summary: Update a project
+      description: Fully updates an existing project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Projects]
+      summary: Partially update a project
+      description: Partially updates an existing project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Projects]
+      summary: Delete a project
+      description: Deletes an existing project (soft delete)
+      responses:
+        '204':
+          $ref: '#/components/responses/ProjectDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/metadata:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Projects]
+      summary: Get project metadata
+      description: Returns lightweight project information (no full details)
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectMetadataResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/archive:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    post:
+      tags: [Projects]
+      summary: Archive a project
+      description: Archives a completed project
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectArchived'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/restore:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    post:
+      tags: [Projects]
+      summary: Restore an archived project
+      description: Restores an archived project to active status
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectRestored'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/history:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Projects]
+      summary: Get project history
+      description: Returns chronological history of all changes made to the project
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/wbs-structure:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Projects, Integration]
+      summary: Get WBS structure for Task Service
+      description: Returns project structure for WBS generation by Task Service
+      responses:
+        '200':
+          $ref: '#/components/responses/WBSStructureResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== MEMBER ENDPOINTS ====================
+
+  /projects/{project_id}/members:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Members]
+      summary: List all project members
+      description: Returns all members of the project
+      responses:
+        '200':
+          $ref: '#/components/responses/MemberList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Members]
+      summary: Add a member to the project
+      description: Adds a new member with specified role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/MemberCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/members/{user_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the user
+
+    get:
+      tags: [Members]
+      summary: Get a project member by user ID
+      description: Returns details of a specific member
+      responses:
+        '200':
+          $ref: '#/components/responses/MemberDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Members]
+      summary: Update a project member
+      description: Updates member role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/MemberUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Members]
+      summary: Partially update a project member
+      description: Partially updates member role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/MemberUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Members]
+      summary: Remove a member from the project
+      description: Removes a member from the project (soft delete)
+      responses:
+        '204':
+          $ref: '#/components/responses/MemberDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== MILESTONE ENDPOINTS ====================
+
+  /projects/{project_id}/milestones:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Milestones]
+      summary: List all milestones
+      description: Returns all milestones for the project
+      responses:
+        '200':
+          $ref: '#/components/responses/MilestoneList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Milestones]
+      summary: Create a new milestone
+      description: Creates a new milestone for the project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/MilestoneCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/milestones/{milestone_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: milestone_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the milestone
+
+    get:
+      tags: [Milestones]
+      summary: Get a milestone by ID
+      description: Returns details of a specific milestone
+      responses:
+        '200':
+          $ref: '#/components/responses/MilestoneDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Milestones]
+      summary: Update a milestone
+      description: Fully updates an existing milestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/MilestoneUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Milestones]
+      summary: Partially update a milestone
+      description: Partially updates an existing milestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/MilestoneUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Milestones]
+      summary: Delete a milestone
+      description: Deletes an existing milestone
+      responses:
+        '204':
+          $ref: '#/components/responses/MilestoneDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/milestones/{milestone_id}/deliverables:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: milestone_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the milestone
+
+    get:
+      tags: [Milestones, Deliverables]
+      summary: List deliverables for a milestone
+      description: Returns all deliverables associated with this milestone
+      responses:
+        '200':
+          $ref: '#/components/responses/DeliverableList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Milestones, Deliverables]
+      summary: Associate deliverable with milestone
+      description: Creates an association between a deliverable and this milestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deliverable_id
+              properties:
+                deliverable_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          $ref: '#/components/responses/MilestoneDeliverableCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/milestones/{milestone_id}/deliverables/{deliverable_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: milestone_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the milestone
+      - name: deliverable_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the deliverable
+
+    get:
+      tags: [Milestones, Deliverables]
+      summary: Get milestone-deliverable association
+      description: Returns details of the association between milestone and deliverable
+      responses:
+        '200':
+          $ref: '#/components/responses/MilestoneDeliverableDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Milestones, Deliverables]
+      summary: Remove deliverable from milestone
+      description: Removes the association between milestone and deliverable
+      responses:
+        '204':
+          $ref: '#/components/responses/AssociationDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== DELIVERABLE ENDPOINTS ====================
+
+  /projects/{project_id}/deliverables:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Deliverables]
+      summary: List all deliverables
+      description: Returns all deliverables for the project
+      responses:
+        '200':
+          $ref: '#/components/responses/DeliverableList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Deliverables]
+      summary: Create a new deliverable
+      description: Creates a new deliverable for the project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliverableCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/DeliverableCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/deliverables/{deliverable_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: deliverable_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the deliverable
+
+    get:
+      tags: [Deliverables]
+      summary: Get a deliverable by ID
+      description: Returns details of a specific deliverable
+      responses:
+        '200':
+          $ref: '#/components/responses/DeliverableDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Deliverables]
+      summary: Update a deliverable
+      description: Fully updates an existing deliverable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliverableUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/DeliverableUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Deliverables]
+      summary: Partially update a deliverable
+      description: Partially updates an existing deliverable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliverableUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/DeliverableUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Deliverables]
+      summary: Delete a deliverable
+      description: Deletes an existing deliverable
+      responses:
+        '204':
+          $ref: '#/components/responses/DeliverableDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== ROLE ENDPOINTS ====================
+
+  /projects/{project_id}/roles:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Roles]
+      summary: List all project roles
+      description: Returns all roles for the project (default and custom)
+      responses:
+        '200':
+          $ref: '#/components/responses/RoleList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Roles]
+      summary: Create a custom role
+      description: Creates a new custom role for the project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRoleCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/RoleCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/roles/{role_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: role_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the role
+
+    get:
+      tags: [Roles]
+      summary: Get a role by ID
+      description: Returns details of a specific role
+      responses:
+        '200':
+          $ref: '#/components/responses/RoleDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Roles]
+      summary: Update a role
+      description: Updates a custom role (default roles cannot be modified)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRoleUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/RoleUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Roles]
+      summary: Partially update a role
+      description: Partially updates a custom role (default roles cannot be modified)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRoleUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/RoleUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Roles]
+      summary: Delete a role
+      description: Deletes a custom role (default roles cannot be deleted)
+      responses:
+        '204':
+          $ref: '#/components/responses/RoleDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== POLICY ENDPOINTS ====================
+
+  /projects/{project_id}/policies:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Policies]
+      summary: List all project policies
+      description: Returns all policies for the project
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Policies]
+      summary: Create a new policy
+      description: Creates a new policy for the project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPolicyCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/policies/{policy_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: policy_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the policy
+
+    get:
+      tags: [Policies]
+      summary: Get a policy by ID
+      description: Returns details of a specific policy
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Policies]
+      summary: Update a policy
+      description: Fully updates an existing policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPolicyUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Policies]
+      summary: Partially update a policy
+      description: Partially updates an existing policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPolicyUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Policies]
+      summary: Delete a policy
+      description: Deletes an existing policy
+      responses:
+        '204':
+          $ref: '#/components/responses/PolicyDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== PERMISSION ENDPOINTS ====================
+
+  /projects/{project_id}/permissions:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+
+    get:
+      tags: [Permissions]
+      summary: List all available permissions
+      description: Returns all predefined permissions for project context
+      responses:
+        '200':
+          $ref: '#/components/responses/PermissionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== ROLE-POLICY ASSOCIATION ENDPOINTS ====================
+
+  /projects/{project_id}/roles/{role_id}/policies:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: role_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the role
+
+    get:
+      tags: [Roles, Policies]
+      summary: List policies for a role
+      description: Returns all policies associated with this role
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/roles/{role_id}/policies/{policy_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: role_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the role
+      - name: policy_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the policy
+
+    get:
+      tags: [Roles, Policies]
+      summary: Get role-policy association
+      description: Returns details of the association between role and policy
+      responses:
+        '200':
+          $ref: '#/components/responses/RolePolicyDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Roles, Policies]
+      summary: Associate policy with role
+      description: Creates an association between a policy and this role
+      responses:
+        '201':
+          $ref: '#/components/responses/AssociationCreated'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Roles, Policies]
+      summary: Remove policy from role
+      description: Removes the association between role and policy
+      responses:
+        '204':
+          $ref: '#/components/responses/AssociationDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== POLICY-PERMISSION ASSOCIATION ENDPOINTS ====================
+
+  /projects/{project_id}/policies/{policy_id}/permissions:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: policy_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the policy
+
+    get:
+      tags: [Policies, Permissions]
+      summary: List permissions for a policy
+      description: Returns all permissions associated with this policy
+      responses:
+        '200':
+          $ref: '#/components/responses/PermissionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/policies/{policy_id}/permissions/{permission_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the project
+      - name: policy_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the policy
+      - name: permission_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique identifier of the permission
+
+    get:
+      tags: [Policies, Permissions]
+      summary: Get policy-permission association
+      description: Returns details of the association between policy and permission
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyPermissionDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Policies, Permissions]
+      summary: Associate permission with policy
+      description: Creates an association between a permission and this policy
+      responses:
+        '201':
+          $ref: '#/components/responses/AssociationCreated'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Policies, Permissions]
+      summary: Remove permission from policy
+      description: Removes the association between policy and permission
+      responses:
+        '204':
+          $ref: '#/components/responses/AssociationDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== ACCESS CONTROL ENDPOINTS ====================
+
+  /check-file-access:
+    post:
+      tags: [Access Control, Integration]
+      summary: Check file access permission
+      description: Validates if user has permission to perform action on project files (called by Storage Service)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileAccessRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/FileAccessAllowed'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /check-file-access-batch:
+    post:
+      tags: [Access Control, Integration]
+      summary: Check file access permissions (batch)
+      description: Validates multiple file access checks in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileAccessBatchRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/FileAccessBatchResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /check-project-access:
+    post:
+      tags: [Access Control, Integration]
+      summary: Check project access permission
+      description: Validates if user has permission to perform action on project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectAccessRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectAccessAllowed'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /check-project-access-batch:
+    post:
+      tags: [Access Control, Integration]
+      summary: Check project access permissions (batch)
+      description: Validates multiple project access checks in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectAccessBatchRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectAccessBatchResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 tags:
 - name: System
   description: System health, version, and configuration endpoints
-- name: Dummy
-  description: Dummy operations
+- name: Projects
+  description: Project lifecycle management operations
+- name: Members
+  description: Project member management operations
+- name: Milestones
+  description: Project milestone management operations
+- name: Deliverables
+  description: Project deliverable management operations
+- name: Roles
+  description: Project role management operations (RBAC)
+- name: Policies
+  description: Project policy management operations (RBAC)
+- name: Permissions
+  description: Project permission management operations (RBAC)
+- name: Access Control
+  description: Access validation endpoints for Storage and Task services
+- name: Integration
+  description: Integration endpoints with other Waterfall services
+
