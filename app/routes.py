@@ -13,6 +13,10 @@ from app.resources.version import VersionResource
 from app.resources.config import ConfigResource
 from app.resources.health import HealthResource
 from app.resources.project import ProjectListResource, ProjectResource
+from app.resources.milestone import (
+    MilestoneListResource,
+    MilestoneResource,
+)
 
 
 def register_routes(app):
@@ -40,5 +44,12 @@ def register_routes(app):
     # Project endpoints
     api.add_resource(ProjectListResource, "/projects")
     api.add_resource(ProjectResource, "/projects/<string:project_id>")
+
+    # Milestone endpoints
+    api.add_resource(
+        MilestoneListResource,
+        "/projects/<string:project_id>/milestones",
+    )
+    api.add_resource(MilestoneResource, "/milestones/<string:milestone_id>")
 
     logger.info("Routes registered successfully.")

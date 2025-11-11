@@ -178,9 +178,16 @@ class MilestoneCreateSchema(SQLAlchemyAutoSchema):
         """Meta configuration for MilestoneCreateSchema."""
 
         model = Milestone
-        load_instance = True
+        load_instance = False  # Don't try to load instance
         include_fk = True
-        exclude = ("id", "created_at", "updated_at", "removed_at")
+        exclude = (
+            "id",
+            "project_id",  # Set from URL parameter
+            "company_id",  # Set from JWT
+            "created_at",
+            "updated_at",
+            "removed_at",
+        )
 
 
 class MilestoneUpdateSchema(SQLAlchemyAutoSchema):
