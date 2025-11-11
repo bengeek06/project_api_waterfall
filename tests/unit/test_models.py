@@ -9,6 +9,7 @@ Tests model validation, relationships, soft deletes, and business logic.
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from uuid import uuid4
 
 import pytest
 
@@ -32,20 +33,20 @@ from app.models.project import (
 
 @pytest.fixture
 def company_id():
-    """Generate a test company ID."""
-    return uuid.uuid4()
+    """Fixture for company UUID (as string for SQLite compatibility)."""
+    return str(uuid4())
 
 
 @pytest.fixture
 def user_id():
-    """Generate a test user ID."""
-    return uuid.uuid4()
+    """Fixture for user UUID (as string for SQLite compatibility)."""
+    return str(uuid4())
 
 
 @pytest.fixture
 def customer_id():
-    """Generate a test customer ID."""
-    return uuid.uuid4()
+    """Fixture for customer UUID (as string for SQLite compatibility)."""
+    return str(uuid4())
 
 
 @pytest.fixture

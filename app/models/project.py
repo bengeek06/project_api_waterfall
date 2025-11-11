@@ -21,7 +21,6 @@ Models included:
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Index, CheckConstraint
 from app.models.db import db
 
@@ -34,13 +33,13 @@ milestone_deliverable_association = db.Table(
     "milestone_deliverable_association",
     db.Column(
         "milestone_id",
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("milestones.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     db.Column(
         "deliverable_id",
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("deliverables.id", ondelete="CASCADE"),
         primary_key=True,
     ),
@@ -51,13 +50,13 @@ role_policy_association = db.Table(
     "role_policy_association",
     db.Column(
         "role_id",
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("project_roles.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     db.Column(
         "policy_id",
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("project_policies.id", ondelete="CASCADE"),
         primary_key=True,
     ),
@@ -68,13 +67,13 @@ policy_permission_association = db.Table(
     "policy_permission_association",
     db.Column(
         "policy_id",
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("project_policies.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     db.Column(
         "permission_id",
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("project_permissions.id", ondelete="CASCADE"),
         primary_key=True,
     ),
@@ -108,14 +107,14 @@ class Project(db.Model):
     __tablename__ = "projects"
 
     # Primary key
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Core fields
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500), nullable=True)
 
     # Multi-tenancy and ownership
-    company_id = db.Column(UUID(as_uuid=True), nullable=False, index=True)
+    company_id = db.Column(db.String(36), nullable=False, index=True)
     customer_id = db.Column(
         db.String(36), nullable=True
     )  # Reference to Identity Service (external UUID as string)
@@ -279,17 +278,17 @@ class Milestone(db.Model):
     __tablename__ = "milestones"
 
     # Primary key
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Foreign keys
     project_id = db.Column(
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     company_id = db.Column(
-        UUID(as_uuid=True), nullable=False, index=True
+        db.String(36), nullable=False, index=True
     )  # Denormalized for performance
 
     # Core fields
@@ -349,16 +348,16 @@ class Deliverable(db.Model):
     __tablename__ = "deliverables"
 
     # Primary key
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Foreign keys
     project_id = db.Column(
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    company_id = db.Column(UUID(as_uuid=True), nullable=False, index=True)
+    company_id = db.Column(db.String(36), nullable=False, index=True)
 
     # Core fields
     name = db.Column(db.String(100), nullable=False)
@@ -422,26 +421,26 @@ class ProjectMember(db.Model):
 
     # Composite primary key (project_id, user_id)
     project_id = db.Column(
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("projects.id", ondelete="CASCADE"),
         primary_key=True,
     )
     user_id = db.Column(
-        UUID(as_uuid=True), primary_key=True
+        db.String(36), primary_key=True
     )  # Reference to Identity Service
 
     # Denormalized for performance
-    company_id = db.Column(UUID(as_uuid=True), nullable=False, index=True)
+    company_id = db.Column(db.String(36), nullable=False, index=True)
 
     # Role assignment
     role_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("project_roles.id"), nullable=False
+        db.String(36), db.ForeignKey("project_roles.id"), nullable=False
     )
 
     # Audit trail
     added_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     added_by = db.Column(
-        UUID(as_uuid=True), nullable=False
+        db.String(36), nullable=False
     )  # User who added this member
     removed_at = db.Column(db.DateTime, nullable=True)  # Soft delete
 
@@ -480,16 +479,16 @@ class ProjectRole(db.Model):
     __tablename__ = "project_roles"
 
     # Primary key
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Foreign keys
     project_id = db.Column(
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    company_id = db.Column(UUID(as_uuid=True), nullable=False, index=True)
+    company_id = db.Column(db.String(36), nullable=False, index=True)
 
     # Core fields
     name = db.Column(db.String(50), nullable=False)
@@ -543,16 +542,16 @@ class ProjectPolicy(db.Model):
     __tablename__ = "project_policies"
 
     # Primary key
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Foreign keys
     project_id = db.Column(
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    company_id = db.Column(UUID(as_uuid=True), nullable=False, index=True)
+    company_id = db.Column(db.String(36), nullable=False, index=True)
 
     # Core fields
     name = db.Column(db.String(50), nullable=False)
@@ -623,16 +622,16 @@ class ProjectPermission(db.Model):
     __tablename__ = "project_permissions"
 
     # Primary key
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Foreign keys
     project_id = db.Column(
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    company_id = db.Column(UUID(as_uuid=True), nullable=False, index=True)
+    company_id = db.Column(db.String(36), nullable=False, index=True)
 
     # Core fields
     name = db.Column(db.String(50), nullable=False)
@@ -683,16 +682,16 @@ class ProjectHistory(db.Model):
     __tablename__ = "project_history"
 
     # Primary key
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Foreign keys
     project_id = db.Column(
-        UUID(as_uuid=True),
+        db.String(36),
         db.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    company_id = db.Column(UUID(as_uuid=True), nullable=False, index=True)
+    company_id = db.Column(db.String(36), nullable=False, index=True)
 
     # Change tracking
     changed_by = db.Column(

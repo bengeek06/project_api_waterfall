@@ -39,7 +39,7 @@ class ProjectListResource(BaseResource):
     def get(self):
         """List all projects for the authenticated user's company."""
         try:
-            company_id = uuid.UUID(g.company_id)
+            company_id = str(uuid.UUID(g.company_id))
 
             projects = Project.query.filter(
                 Project.company_id == company_id
@@ -59,7 +59,7 @@ class ProjectListResource(BaseResource):
     def post(self):
         """Create a new project."""
         try:
-            company_id = uuid.UUID(g.company_id)
+            company_id = str(uuid.UUID(g.company_id))
             user_id = g.user_id  # Keep as string for external reference
 
             data = request.get_json()
@@ -102,8 +102,8 @@ class ProjectListResource(BaseResource):
             # Create history entry for project creation
             history = ProjectHistory(
                 project_id=project.id,
-                company_id=company_id,
-                changed_by=user_id,
+                company_id=str(company_id),
+                changed_by=str(user_id),
                 action="created",
                 field_name="status",
                 new_value="created",
@@ -167,7 +167,7 @@ class ProjectResource(BaseResource):
         """Get project details."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = uuid.UUID(g.company_id)
+            company_id = str(uuid.UUID(g.company_id))
 
             project = self._get_project(project_id, company_id)
             if not project:
@@ -199,7 +199,7 @@ class ProjectResource(BaseResource):
         """Delete a project (soft delete)."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = uuid.UUID(g.company_id)
+            company_id = str(uuid.UUID(g.company_id))
             user_id = g.user_id  # Keep as string for external reference
 
             project = self._get_project(project_id, company_id)
@@ -210,8 +210,8 @@ class ProjectResource(BaseResource):
 
             history = ProjectHistory(
                 project_id=project.id,
-                company_id=company_id,
-                changed_by=user_id,
+                company_id=str(company_id),
+                changed_by=str(user_id),
                 action="deleted",
                 field_name="removed_at",
                 new_value=project.removed_at.isoformat(),
@@ -232,7 +232,7 @@ class ProjectResource(BaseResource):
         """Internal method to update a project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = uuid.UUID(g.company_id)
+            company_id = str(uuid.UUID(g.company_id))
             user_id = g.user_id  # Keep as string for external reference
 
             project = self._get_project(project_id, company_id)
@@ -266,8 +266,8 @@ class ProjectResource(BaseResource):
 
                     history = ProjectHistory(
                         project_id=project.id,
-                        company_id=company_id,
-                        changed_by=user_id,
+                        company_id=str(company_id),
+                        changed_by=str(user_id),
                         action=action,
                         field_name=field_name,
                         old_value=old_val,
@@ -291,11 +291,11 @@ class ProjectResource(BaseResource):
     @staticmethod
     def _get_project(project_id, company_id):
         """Get project by ID and company."""
-        # Convert string UUIDs to UUID objects
-        if isinstance(project_id, str):
-            project_id = uuid.UUID(project_id)
-        if isinstance(company_id, str):
-            company_id = uuid.UUID(company_id)
+        # Ensure string UUIDs for comparison (db.String(36))
+        if not isinstance(project_id, str):
+            project_id = str(project_id)
+        if not isinstance(company_id, str):
+            company_id = str(company_id)
 
         project = Project.query.filter(
             Project.id == project_id, Project.company_id == company_id
