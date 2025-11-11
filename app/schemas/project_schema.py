@@ -249,9 +249,7 @@ class DeliverableSchema(SQLAlchemyAutoSchema):
             "other",
         ]
         if value not in allowed_types:
-            raise ValidationError(
-                f"Type must be one of: {', '.join(allowed_types)}"
-            )
+            raise ValidationError(f"Type must be one of: {', '.join(allowed_types)}")
         return value
 
 
@@ -443,9 +441,29 @@ class ProjectMemberCreateSchema(SQLAlchemyAutoSchema):
         """Meta configuration for ProjectMemberCreateSchema."""
 
         model = ProjectMember
-        load_instance = True
+        load_instance = False
         include_fk = True
         exclude = ("added_at", "removed_at")
+
+
+class ProjectMemberUpdateSchema(SQLAlchemyAutoSchema):
+    """Schema for updating a project member."""
+
+    class Meta:
+        """Meta configuration for ProjectMemberUpdateSchema."""
+
+        model = ProjectMember
+        load_instance = False
+        include_fk = True
+        exclude = (
+            "project_id",
+            "user_id",
+            "company_id",
+            "added_at",
+            "added_by",
+            "removed_at",
+        )
+        partial = True
 
 
 # ============================================================================

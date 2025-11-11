@@ -21,6 +21,10 @@ from app.resources.deliverable import (
     DeliverableListResource,
     DeliverableResource,
 )
+from app.resources.member import (
+    MemberListResource,
+    MemberResource,
+)
 
 
 def register_routes(app):
@@ -63,6 +67,16 @@ def register_routes(app):
     )
     api.add_resource(
         DeliverableResource, "/deliverables/<string:deliverable_id>"
+    )
+
+    # Member endpoints
+    api.add_resource(
+        MemberListResource,
+        "/projects/<string:project_id>/members",
+    )
+    api.add_resource(
+        MemberResource,
+        "/projects/<string:project_id>/members/<string:user_id>",
     )
 
     logger.info("Routes registered successfully.")
