@@ -8,7 +8,6 @@ from pytest import fixture
 from dotenv import load_dotenv
 import jwt
 from app import create_app
-from app.config import TestingConfig
 from app.models.db import db
 
 os.environ["FLASK_ENV"] = "testing"
@@ -24,7 +23,8 @@ def app():
     This fixture sets up the application context, initializes the database,
     and ensures that the database is created before tests run and dropped after tests complete.
     """
-    app = create_app(TestingConfig)
+    # Use string import to delay loading config until after .env.test is loaded
+    app = create_app("app.config.TestingConfig")
     with app.app_context():
         db.create_all()
         yield app
