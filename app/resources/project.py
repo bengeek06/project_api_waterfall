@@ -25,6 +25,7 @@ from app.schemas.project_schema import (
     ProjectCreateSchema,
     ProjectUpdateSchema,
 )
+from app.logger import logger
 
 # Constants
 ERROR_PROJECT_NOT_FOUND = "Project not found"
@@ -40,7 +41,9 @@ class ProjectListResource(BaseResource):
         try:
             company_id = uuid.UUID(g.company_id)
 
-            projects = Project.query.filter(Project.company_id == company_id).all()
+            projects = Project.query.filter(
+                Project.company_id == company_id
+            ).all()
 
             # Filter out soft-deleted projects
             projects = [p for p in projects if not p.removed_at]
@@ -59,21 +62,37 @@ class ProjectListResource(BaseResource):
             company_id = uuid.UUID(g.company_id)
             user_id = g.user_id  # Keep as string for external reference
 
-            schema = ProjectCreateSchema()
-            data = schema.load(request.get_json())
+            data = request.get_json()
 
-            project = Project(
-                name=data["name"],
-                description=data.get("description"),
-                company_id=company_id,
-                customer_id=data.get("customer_id"),
-                created_by=user_id,
-                status="created",
-                consultation_date=data.get("consultation_date"),
-                submission_deadline=data.get("submission_deadline"),
-                contract_amount=data.get("contract_amount"),
-                budget_currency=data.get("budget_currency"),
-            )
+            # Security: check if client tries to override JWT parameters
+            if "company_id" in data and str(data["company_id"]) != str(
+                company_id
+            ):
+                logger.warning(
+                    "Security: Client attempted to override company_id",
+                    jwt_company_id=str(company_id),
+                    payload_company_id=str(data.get("company_id")),
+                    user_id=user_id,
+                )
+
+            if "created_by" in data and str(data["created_by"]) != user_id:
+                logger.warning(
+                    "Security: Client attempted to override created_by",
+                    jwt_user_id=user_id,
+                    payload_created_by=str(data.get("created_by")),
+                    company_id=str(company_id),
+                )
+
+            # Set authoritative values from JWT
+            data["company_id"] = str(company_id)
+            data["created_by"] = user_id
+
+            schema = ProjectCreateSchema()
+            validated_data = schema.load(data)
+
+            # Create project instance
+            project = Project(**validated_data)
+            project.status = "created"  # Force initial status
 
             db.session.add(project)
 
@@ -88,7 +107,7 @@ class ProjectListResource(BaseResource):
                 action="created",
                 field_name="status",
                 new_value="created",
-                comment=f"Project '{data['name']}' created",
+                comment=f"Project '{validated_data['name']}' created",
             )
             db.session.add(history)
 
@@ -115,14 +134,20 @@ class ProjectListResource(BaseResource):
                     else None
                 ),
                 "contract_amount": (
-                    float(project.contract_amount) if project.contract_amount else None
+                    float(project.contract_amount)
+                    if project.contract_amount
+                    else None
                 ),
                 "budget_currency": project.budget_currency,
                 "created_at": (
-                    project.created_at.isoformat() if project.created_at else None
+                    project.created_at.isoformat()
+                    if project.created_at
+                    else None
                 ),
                 "updated_at": (
-                    project.updated_at.isoformat() if project.updated_at else None
+                    project.updated_at.isoformat()
+                    if project.updated_at
+                    else None
                 ),
             }
             return result, 201
@@ -231,9 +256,13 @@ class ProjectResource(BaseResource):
                 for field_name, change in changes.items():
                     # Convert values to string for storage
                     old_val = (
-                        str(change["from"]) if change["from"] is not None else None
+                        str(change["from"])
+                        if change["from"] is not None
+                        else None
                     )
-                    new_val = str(change["to"]) if change["to"] is not None else None
+                    new_val = (
+                        str(change["to"]) if change["to"] is not None else None
+                    )
 
                     history = ProjectHistory(
                         project_id=project.id,

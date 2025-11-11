@@ -103,8 +103,6 @@ class ProjectCreateSchema(SQLAlchemyAutoSchema):
         include_fk = True
         exclude = (
             "id",
-            "company_id",  # Set from JWT, not from request
-            "created_by",  # Set from JWT, not from request
             "created_at",
             "updated_at",
             "removed_at",
@@ -182,8 +180,6 @@ class MilestoneCreateSchema(SQLAlchemyAutoSchema):
         include_fk = True
         exclude = (
             "id",
-            "project_id",  # Set from URL parameter
-            "company_id",  # Set from JWT
             "created_at",
             "updated_at",
             "removed_at",

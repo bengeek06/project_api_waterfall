@@ -25,6 +25,7 @@ from app.schemas.project_schema import (
     MilestoneCreateSchema,
     MilestoneUpdateSchema,
 )
+from app.logger import logger
 
 # Constants
 ERROR_MILESTONE_NOT_FOUND = "Milestone not found"
@@ -84,19 +85,37 @@ class MilestoneListResource(BaseResource):
             if not project or project.removed_at:
                 return error_response(ERROR_PROJECT_NOT_FOUND, 404)
 
+            data = request.get_json()
+
+            # Security: check if client tries to override URL/JWT parameters
+            if "project_id" in data and str(data["project_id"]) != project_id:
+                logger.warning(
+                    "Security: Client attempted to override project_id",
+                    url_project_id=project_id,
+                    payload_project_id=str(data.get("project_id")),
+                    user_id=g.user_id,
+                    company_id=str(company_id),
+                )
+
+            if "company_id" in data and str(data["company_id"]) != str(
+                company_id
+            ):
+                logger.warning(
+                    "Security: Client attempted to override company_id",
+                    jwt_company_id=str(company_id),
+                    payload_company_id=str(data.get("company_id")),
+                    user_id=g.user_id,
+                )
+
+            # Set authoritative values from URL and JWT
+            data["project_id"] = project_id
+            data["company_id"] = str(company_id)
+
             schema = MilestoneCreateSchema()
-            data = schema.load(request.get_json())
+            validated_data = schema.load(data)
 
-            milestone = Milestone(
-                project_id=uuid.UUID(project_id),
-                company_id=company_id,
-                name=data["name"],
-                description=data.get("description"),
-                status=data.get("status", "planned"),
-                planned_date=data.get("planned_date"),
-                actual_date=data.get("actual_date"),
-            )
-
+            # Create milestone instance
+            milestone = Milestone(**validated_data)
             db.session.add(milestone)
 
             if not self.commit_or_rollback():
