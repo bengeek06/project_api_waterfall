@@ -29,6 +29,10 @@ from app.resources.role import (
     RoleListResource,
     RoleResource,
 )
+from app.resources.policy import (
+    PolicyListResource,
+    PolicyResource,
+)
 
 
 def register_routes(app):
@@ -89,6 +93,16 @@ def register_routes(app):
     api.add_resource(
         RoleResource,
         "/projects/<string:project_id>/roles/<string:role_id>",
+    )
+
+    # Policy endpoints
+    api.add_resource(
+        PolicyListResource,
+        "/projects/<string:project_id>/policies",
+    )
+    api.add_resource(
+        PolicyResource,
+        "/projects/<string:project_id>/policies/<string:policy_id>",
     )
 
     logger.info("Routes registered successfully.")

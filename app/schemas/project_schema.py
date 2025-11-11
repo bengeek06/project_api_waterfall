@@ -354,9 +354,16 @@ class ProjectPolicyCreateSchema(SQLAlchemyAutoSchema):
         """Meta configuration for ProjectPolicyCreateSchema."""
 
         model = ProjectPolicy
-        load_instance = True
+        load_instance = False
         include_fk = True
-        exclude = ("id", "created_at", "updated_at", "removed_at")
+        exclude = (
+            "id",
+            "project_id",
+            "company_id",
+            "created_at",
+            "updated_at",
+            "removed_at",
+        )
 
 
 class ProjectPolicyUpdateSchema(SQLAlchemyAutoSchema):
