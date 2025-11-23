@@ -40,7 +40,7 @@ class MilestoneDeliverableListResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("update_project")
+    @check_access_required("list")
     def get(self, project_id, milestone_id):
         """
         List all deliverables associated with a milestone.
@@ -84,7 +84,7 @@ class MilestoneDeliverableListResource(Resource):
             }, 500
 
     @require_jwt_auth()
-    @check_access_required("update_project")
+    @check_access_required("create")
     def post(self, project_id, milestone_id):
         """
         Associate a deliverable with a milestone.
@@ -180,7 +180,7 @@ class MilestoneDeliverableResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("update_project")
+    @check_access_required("delete")
     def delete(self, project_id, milestone_id, deliverable_id):
         """
         Remove association between a milestone and a deliverable.
