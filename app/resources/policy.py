@@ -51,7 +51,7 @@ class PolicyListResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("manage_policies")
+    @check_access_required("list")
     def get(self, project_id):
         """
         List all policies for a project.
@@ -86,7 +86,7 @@ class PolicyListResource(Resource):
             }, 500
 
     @require_jwt_auth()
-    @check_access_required("manage_policies")
+    @check_access_required("create")
     def post(self, project_id):
         """
         Create a new policy for a project.
@@ -185,7 +185,7 @@ class PolicyResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("manage_policies")
+    @check_access_required("read")
     def get(self, project_id, policy_id):
         """
         Retrieve a single policy by ID.
@@ -211,7 +211,7 @@ class PolicyResource(Resource):
             }, 500
 
     @require_jwt_auth()
-    @check_access_required("manage_policies")
+    @check_access_required("update")
     def put(self, project_id, policy_id):
         """
         Full replacement update of a policy.
@@ -231,7 +231,7 @@ class PolicyResource(Resource):
         return self._update_policy(project_id, policy_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("manage_policies")
+    @check_access_required("update")
     def patch(self, project_id, policy_id):
         """
         Partial update of a policy.
@@ -249,7 +249,7 @@ class PolicyResource(Resource):
         return self._update_policy(project_id, policy_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("manage_policies")
+    @check_access_required("delete")
     def delete(self, project_id, policy_id):
         """
         Soft delete a policy.

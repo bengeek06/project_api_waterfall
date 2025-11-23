@@ -32,7 +32,7 @@ class PolicyPermissionListResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("update_project")
+    @check_access_required("list")
     def get(self, project_id, policy_id):
         """
         Get all permissions associated with a specific policy.
@@ -64,7 +64,7 @@ class PolicyPermissionListResource(Resource):
         return permission_schema.dump(permissions), 200
 
     @require_jwt_auth()
-    @check_access_required("update_project")
+    @check_access_required("create")
     def post(self, project_id, policy_id):
         """
         Add a permission to a policy.
@@ -134,7 +134,7 @@ class PolicyPermissionResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("update_project")
+    @check_access_required("delete")
     def delete(self, project_id, policy_id, permission_id):
         """
         Remove a permission from a policy.

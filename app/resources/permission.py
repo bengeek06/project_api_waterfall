@@ -51,7 +51,7 @@ class PermissionListResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("manage_policies")  # Same permission as policies
+    @check_access_required("list")  # Same permission as policies
     def get(self, project_id):
         """
         List all permissions for a project.
