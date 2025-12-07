@@ -62,7 +62,7 @@ if [ -n "$(git status --porcelain)" ]; then
     echo -e "${YELLOW}Warning: You have uncommitted changes${NC}"
     read -p "Do you want to continue? (y/n) " -n 1 -r
     echo
-    if [[ ! $RPLY =~ ^[Yy]$ ]]; then
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${RED}Aborted${NC}"
         exit 1
     fi
