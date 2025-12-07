@@ -70,7 +70,7 @@ class ProjectListResource(BaseResource):
     def post(self):
         """Create a new project."""
         logger.info("Creating new project")
-        
+
         try:
             company_id = g.company_id  # Already a string from JWT
             user_id = g.user_id  # Already a string from JWT
@@ -82,7 +82,7 @@ class ProjectListResource(BaseResource):
             data["created_by"] = user_id
 
             schema = ProjectCreateSchema(session=db.session)
-            
+
             try:
                 validated_data = schema.load(data)
 
@@ -96,7 +96,10 @@ class ProjectListResource(BaseResource):
                 db.session.flush()
             except ValidationError as e:
                 logger.error(f"Validation error: {e.messages}")
-                return {"message": "Validation error", "errors": e.messages}, 400
+                return {
+                    "message": "Validation error",
+                    "errors": e.messages,
+                }, 400
 
             try:
                 # Create history entry for project creation
@@ -112,7 +115,10 @@ class ProjectListResource(BaseResource):
                 db.session.add(history)
             except ValidationError as e:
                 logger.error(f"Validation error: {e.messages}")
-                return {"message": "Validation error", "errors": e.messages}, 400
+                return {
+                    "message": "Validation error",
+                    "errors": e.messages,
+                }, 400
 
             if not self.commit_or_rollback():
                 logger.error("Failed to create project due to database error")

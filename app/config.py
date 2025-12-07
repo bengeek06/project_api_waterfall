@@ -85,6 +85,7 @@ class Config:
     if USE_IDENTITY_SERVICE and not IDENTITY_SERVICE_URL:
         raise ValueError(ERROR_IDENTITY_URL_REQUIRED)
 
+
 class DevelopmentConfig(Config):
     """Configuration for the development environment."""
 

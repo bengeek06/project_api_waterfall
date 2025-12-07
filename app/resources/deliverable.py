@@ -20,7 +20,6 @@ Endpoints:
 - DELETE /deliverables/{id} - Delete deliverable (soft delete)
 """
 
-import uuid
 from datetime import datetime, timezone
 
 from flask import g, request

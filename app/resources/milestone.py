@@ -20,7 +20,6 @@ Endpoints:
 - DELETE /milestones/{id} - Delete milestone (soft delete)
 """
 
-import uuid
 from datetime import datetime, timezone
 
 from flask import g, request
