@@ -20,7 +20,6 @@ Endpoints:
 - DELETE /milestones/{id} - Delete milestone (soft delete)
 """
 
-import uuid
 from datetime import datetime, timezone
 
 from flask import g, request
@@ -47,11 +46,12 @@ class MilestoneListResource(BaseResource):
     """Resource for listing and creating milestones within a project."""
 
     @require_jwt_auth()
+    @check_access_required("LIST")
     def get(self, project_id):
         """List all milestones for a specific project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -79,12 +79,12 @@ class MilestoneListResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self, project_id):
         """Create a new milestone for a project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -146,12 +146,12 @@ class MilestoneResource(BaseResource):
     """Resource for individual milestone operations."""
 
     @require_jwt_auth()
-    @check_access_required("read")
+    @check_access_required("READ")
     def get(self, milestone_id):
         """Get milestone details."""
         try:
             validate_uuid(milestone_id, "milestone_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             milestone = self._get_milestone(milestone_id, company_id)
             if not milestone:
@@ -166,24 +166,24 @@ class MilestoneResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def put(self, milestone_id):
         """Fully update a milestone."""
         return self._update(milestone_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def patch(self, milestone_id):
         """Partially update a milestone."""
         return self._update(milestone_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, milestone_id):
         """Delete a milestone (soft delete)."""
         try:
             validate_uuid(milestone_id, "milestone_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             milestone = self._get_milestone(milestone_id, company_id)
             if not milestone:
@@ -205,7 +205,7 @@ class MilestoneResource(BaseResource):
         """Internal method to update a milestone."""
         try:
             validate_uuid(milestone_id, "milestone_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             milestone = self._get_milestone(milestone_id, company_id)
             if not milestone:

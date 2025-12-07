@@ -20,7 +20,6 @@ Endpoints:
 - DELETE /deliverables/{id} - Delete deliverable (soft delete)
 """
 
-import uuid
 from datetime import datetime, timezone
 
 from flask import g, request
@@ -47,11 +46,12 @@ class DeliverableListResource(BaseResource):
     """Resource for listing and creating deliverables within a project."""
 
     @require_jwt_auth()
+    @check_access_required("LIST")
     def get(self, project_id):
         """List all deliverables for a specific project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -79,12 +79,12 @@ class DeliverableListResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self, project_id):
         """Create a new deliverable for a project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -146,11 +146,12 @@ class DeliverableResource(BaseResource):
     """Resource for individual deliverable operations."""
 
     @require_jwt_auth()
+    @check_access_required("READ")
     def get(self, deliverable_id):
         """Get a specific deliverable by ID."""
         try:
             validate_uuid(deliverable_id, "id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             deliverable = self._get_deliverable(deliverable_id, company_id)
             if not deliverable:
@@ -165,24 +166,24 @@ class DeliverableResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def put(self, deliverable_id):
         """Update a deliverable (full replacement)."""
         return self._update_deliverable(deliverable_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def patch(self, deliverable_id):
         """Partially update a deliverable."""
         return self._update_deliverable(deliverable_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, deliverable_id):
         """Delete a deliverable (soft delete)."""
         try:
             validate_uuid(deliverable_id, "id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             deliverable = self._get_deliverable(deliverable_id, company_id)
             if not deliverable:
@@ -204,7 +205,7 @@ class DeliverableResource(BaseResource):
         """Internal method to handle both PUT and PATCH updates."""
         try:
             validate_uuid(deliverable_id, "id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             deliverable = self._get_deliverable(deliverable_id, company_id)
             if not deliverable:

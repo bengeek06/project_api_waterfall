@@ -28,6 +28,16 @@ import os
 
 from dotenv import load_dotenv
 
+from app.constants import (
+    BOOLEAN_TRUE_VALUES,
+    DEFAULT_GUARDIAN_TIMEOUT,
+    DEFAULT_USE_GUARDIAN,
+    DEFAULT_USE_IDENTITY,
+    ERROR_GUARDIAN_URL_REQUIRED,
+    ERROR_IDENTITY_URL_REQUIRED,
+    ERROR_JWT_SECRET_NOT_SET,
+)
+
 # Load .env file ONLY if not running in Docker
 # This hook ensures environment variables are loaded for flask commands
 if not os.environ.get("IN_DOCKER_CONTAINER") and not os.environ.get(
@@ -45,8 +55,35 @@ if not os.environ.get("IN_DOCKER_CONTAINER") and not os.environ.get(
 class Config:
     """Base configuration common to all environments."""
 
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # JWT Configuration
+    JWT_SECRET = os.environ.get("JWT_SECRET")
+    if not JWT_SECRET:
+        raise ValueError(ERROR_JWT_SECRET_NOT_SET)
+
+    # Guardian Service Configuration
+    USE_GUARDIAN_SERVICE = (
+        os.environ.get("USE_GUARDIAN_SERVICE", DEFAULT_USE_GUARDIAN).lower()
+        in BOOLEAN_TRUE_VALUES
+    )
+    GUARDIAN_SERVICE_URL = os.environ.get("GUARDIAN_SERVICE_URL")
+    GUARDIAN_SERVICE_TIMEOUT = float(
+        os.environ.get("GUARDIAN_SERVICE_TIMEOUT", DEFAULT_GUARDIAN_TIMEOUT)
+    )
+
+    # Validate GUARDIAN_SERVICE_URL if Guardian is enabled
+    if USE_GUARDIAN_SERVICE and not GUARDIAN_SERVICE_URL:
+        raise ValueError(ERROR_GUARDIAN_URL_REQUIRED)
+
+    # Identity Service
+    USE_IDENTITY_SERVICE = (
+        os.environ.get("USE_IDENTITY_SERVICE", DEFAULT_USE_IDENTITY).lower()
+        in BOOLEAN_TRUE_VALUES
+    )
+    IDENTITY_SERVICE_URL = os.environ.get("IDENTITY_SERVICE_URL")
+    if USE_IDENTITY_SERVICE and not IDENTITY_SERVICE_URL:
+        raise ValueError(ERROR_IDENTITY_URL_REQUIRED)
 
 
 class DevelopmentConfig(Config):

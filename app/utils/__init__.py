@@ -19,12 +19,8 @@ Modules:
 from app.utils.check_access import (
     check_access,
     check_access_required,
-    extract_jwt_data,
 )
-from app.utils.jwt_auth import (
-    require_jwt_auth,
-    extract_jwt_data
-)
+from app.utils.jwt_auth import require_jwt_auth, extract_jwt_data
 
 __all__ = [
     "check_access",

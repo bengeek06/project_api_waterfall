@@ -52,6 +52,7 @@ class RoleListResource(Resource):
     """
 
     @require_jwt_auth()
+    @check_access_required("LIST")
     def get(self, project_id):
         """
         List all roles for a project.
@@ -79,7 +80,7 @@ class RoleListResource(Resource):
         return schema.dump(roles), 200
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self, project_id):
         """
         Create a new custom role for the project.
@@ -159,6 +160,7 @@ class RoleResource(Resource):
     """
 
     @require_jwt_auth()
+    @check_access_required("READ")
     def get(self, project_id, role_id):
         """
         Get a specific project role.
@@ -177,7 +179,7 @@ class RoleResource(Resource):
         return schema.dump(role), 200
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def put(self, project_id, role_id):
         """
         Update a project role (full replacement).
@@ -197,7 +199,7 @@ class RoleResource(Resource):
         return self._update_role(project_id, role_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def patch(self, project_id, role_id):
         """
         Update a project role (partial update).
@@ -217,7 +219,7 @@ class RoleResource(Resource):
         return self._update_role(project_id, role_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, project_id, role_id):
         """
         Delete a role from the project (soft delete).

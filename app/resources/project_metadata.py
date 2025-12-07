@@ -27,7 +27,7 @@ class ProjectMetadataResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("read")
+    @check_access_required("READ")
     def get(self, project_id):
         """
         Get project metadata.

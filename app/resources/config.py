@@ -31,7 +31,7 @@ class ConfigResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("read")
+    @check_access_required("READ")
     def get(self):
         """
         Retrieve the current application configuration.
