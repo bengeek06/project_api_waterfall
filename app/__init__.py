@@ -35,6 +35,7 @@ from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from sqlalchemy import inspect
 from werkzeug.exceptions import InternalServerError
+from prometheus_flask_exporter import PrometheusMetrics
 
 from app.logger import logger
 from app.models.db import db
@@ -258,6 +259,12 @@ def create_app(config_class):
         CORS(
             app, supports_credentials=True, resources={r"/*": {"origins": "*"}}
         )
+
+    PrometheusMetrics(
+        app,
+        defaults_prefix='project_service',
+        export_defaults=False
+    )
 
     register_extensions(app)
     register_error_handlers(app)

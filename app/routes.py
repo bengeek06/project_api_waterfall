@@ -14,7 +14,9 @@ Routes for the Flask application.
 # and linking them to the corresponding resources.
 """
 
+from flask import Response
 from flask_restful import Api
+from prometheus_client import generate_latest, REGISTRY
 
 from app.logger import logger
 from app.resources.access_control import (
@@ -184,5 +186,10 @@ def register_routes(app):
     api.add_resource(
         CheckProjectAccessBatchResource, "/check-project-access-batch"
     )
+
+    @app.route('/metrics')
+    def metrics():
+        """Prometheus metrics endpoint"""
+        return Response(generate_latest(REGISTRY), mimetype='text/plain; version=0.0.4')
 
     logger.info("Routes registered successfully.")
