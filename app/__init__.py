@@ -260,15 +260,14 @@ def create_app(config_class):
             app, supports_credentials=True, resources={r"/*": {"origins": "*"}}
         )
 
-    PrometheusMetrics(
-        app,
-        defaults_prefix='project_service',
-        export_defaults=False
-    )
+    metrics = PrometheusMetrics.for_app_factory()
 
     register_extensions(app)
     register_error_handlers(app)
     register_routes(app)
+
+    metrics.init_app(app)
+
     if app.config.get("TESTING"):
         register_test_routes(app)
 
