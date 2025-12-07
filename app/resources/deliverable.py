@@ -52,7 +52,7 @@ class DeliverableListResource(BaseResource):
         """List all deliverables for a specific project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -85,7 +85,7 @@ class DeliverableListResource(BaseResource):
         """Create a new deliverable for a project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -152,7 +152,7 @@ class DeliverableResource(BaseResource):
         """Get a specific deliverable by ID."""
         try:
             validate_uuid(deliverable_id, "id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             deliverable = self._get_deliverable(deliverable_id, company_id)
             if not deliverable:
@@ -184,7 +184,7 @@ class DeliverableResource(BaseResource):
         """Delete a deliverable (soft delete)."""
         try:
             validate_uuid(deliverable_id, "id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             deliverable = self._get_deliverable(deliverable_id, company_id)
             if not deliverable:
@@ -206,7 +206,7 @@ class DeliverableResource(BaseResource):
         """Internal method to handle both PUT and PATCH updates."""
         try:
             validate_uuid(deliverable_id, "id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             deliverable = self._get_deliverable(deliverable_id, company_id)
             if not deliverable:

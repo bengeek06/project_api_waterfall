@@ -20,7 +20,6 @@ Endpoints:
 - DELETE /projects/{id} - Delete project (soft delete)
 """
 
-import uuid
 from datetime import datetime, timezone
 
 from flask import g, request
@@ -51,7 +50,7 @@ class ProjectListResource(BaseResource):
     def get(self):
         """List all projects for the authenticated user's company."""
         try:
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             projects = Project.query.filter(
                 Project.company_id == company_id
@@ -70,99 +69,58 @@ class ProjectListResource(BaseResource):
     @check_access_required("CREATE")
     def post(self):
         """Create a new project."""
+        logger.info("Creating new project")
+        
         try:
-            company_id = str(uuid.UUID(g.company_id))
-            user_id = g.user_id  # Keep as string for external reference
+            company_id = g.company_id  # Already a string from JWT
+            user_id = g.user_id  # Already a string from JWT
 
             data = request.get_json()
 
-            # Security: check if client tries to override JWT parameters
-            if "company_id" in data and str(data["company_id"]) != str(
-                company_id
-            ):
-                logger.warning(
-                    "Security: Client attempted to override company_id",
-                    jwt_company_id=str(company_id),
-                    payload_company_id=str(data.get("company_id")),
-                    user_id=user_id,
-                )
-
-            if "created_by" in data and str(data["created_by"]) != user_id:
-                logger.warning(
-                    "Security: Client attempted to override created_by",
-                    jwt_user_id=user_id,
-                    payload_created_by=str(data.get("created_by")),
-                    company_id=str(company_id),
-                )
-
             # Set authoritative values from JWT
-            data["company_id"] = str(company_id)
+            data["company_id"] = company_id
             data["created_by"] = user_id
 
-            schema = ProjectCreateSchema()
-            validated_data = schema.load(data)
+            schema = ProjectCreateSchema(session=db.session)
+            
+            try:
+                validated_data = schema.load(data)
 
-            # Create project instance
-            project = Project(**validated_data)
-            project.status = "created"  # Force initial status
+                # Create project instance
+                project = Project(**validated_data)
+                project.status = "created"  # Force initial status
 
-            db.session.add(project)
+                db.session.add(project)
 
-            # Flush to generate project.id before creating history
-            db.session.flush()
+                # Flush to generate project.id before creating history
+                db.session.flush()
+            except ValidationError as e:
+                logger.error(f"Validation error: {e.messages}")
+                return {"message": "Validation error", "errors": e.messages}, 400
 
-            # Create history entry for project creation
-            history = ProjectHistory(
-                project_id=project.id,
-                company_id=str(company_id),
-                changed_by=str(user_id),
-                action="created",
-                field_name="status",
-                new_value="created",
-                comment=f"Project '{validated_data['name']}' created",
-            )
-            db.session.add(history)
+            try:
+                # Create history entry for project creation
+                history = ProjectHistory(
+                    project_id=project.id,
+                    company_id=company_id,
+                    changed_by=user_id,
+                    action="created",
+                    field_name="status",
+                    new_value="created",
+                    comment=f"Project '{validated_data['name']}' created",
+                )
+                db.session.add(history)
+            except ValidationError as e:
+                logger.error(f"Validation error: {e.messages}")
+                return {"message": "Validation error", "errors": e.messages}, 400
 
             if not self.commit_or_rollback():
+                logger.error("Failed to create project due to database error")
                 return error_response("Failed to create project", 500)
 
-            # Manually build response to avoid session issues
-            result = {
-                "id": str(project.id),
-                "name": project.name,
-                "description": project.description,
-                "status": project.status,
-                "company_id": str(project.company_id),
-                "customer_id": str(project.customer_id) if project.customer_id else None,
-                "created_by": project.created_by,
-                "consultation_date": (
-                    project.consultation_date.isoformat()
-                    if project.consultation_date
-                    else None
-                ),
-                "submission_deadline": (
-                    project.submission_deadline.isoformat()
-                    if project.submission_deadline
-                    else None
-                ),
-                "contract_amount": (
-                    float(project.contract_amount)
-                    if project.contract_amount
-                    else None
-                ),
-                "budget_currency": project.budget_currency,
-                "created_at": (
-                    project.created_at.isoformat()
-                    if project.created_at
-                    else None
-                ),
-                "updated_at": (
-                    project.updated_at.isoformat()
-                    if project.updated_at
-                    else None
-                ),
-            }
-            return result, 201
+            # Use schema to serialize response
+            response_schema = ProjectSchema()
+            return response_schema.dump(project), 201
 
         except ValidationError as error:
             return error_response(ERROR_VALIDATION, 400, errors=error.messages)
@@ -179,7 +137,7 @@ class ProjectResource(BaseResource):
         """Get project details."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             project = self._get_project(project_id, company_id)
             if not project:
@@ -208,11 +166,11 @@ class ProjectResource(BaseResource):
     @require_jwt_auth()
     @check_access_required("DELETE")
     def delete(self, project_id):
-        """Delete a project (soft delete)."""
+        """Soft delete a project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
-            user_id = g.user_id  # Keep as string for external reference
+            company_id = g.company_id
+            user_id = g.user_id
 
             project = self._get_project(project_id, company_id)
             if not project:
@@ -222,8 +180,8 @@ class ProjectResource(BaseResource):
 
             history = ProjectHistory(
                 project_id=project.id,
-                company_id=str(company_id),
-                changed_by=str(user_id),
+                company_id=company_id,
+                changed_by=user_id,
                 action="deleted",
                 field_name="removed_at",
                 new_value=project.removed_at.isoformat(),
@@ -246,8 +204,8 @@ class ProjectResource(BaseResource):
         """Internal method to update a project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
-            user_id = g.user_id  # Keep as string for external reference
+            company_id = g.company_id
+            user_id = g.user_id
 
             project = self._get_project(project_id, company_id)
             if not project:
@@ -287,8 +245,8 @@ class ProjectResource(BaseResource):
 
                     history = ProjectHistory(
                         project_id=project.id,
-                        company_id=str(company_id),
-                        changed_by=str(user_id),
+                        company_id=company_id,
+                        changed_by=user_id,
                         action=action,
                         field_name=field_name,
                         old_value=old_val,

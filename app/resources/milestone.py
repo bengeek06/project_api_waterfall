@@ -52,7 +52,7 @@ class MilestoneListResource(BaseResource):
         """List all milestones for a specific project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -85,7 +85,7 @@ class MilestoneListResource(BaseResource):
         """Create a new milestone for a project."""
         try:
             validate_uuid(project_id, "project_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             # Verify project exists and belongs to company
             project = Project.query.filter(
@@ -152,7 +152,7 @@ class MilestoneResource(BaseResource):
         """Get milestone details."""
         try:
             validate_uuid(milestone_id, "milestone_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             milestone = self._get_milestone(milestone_id, company_id)
             if not milestone:
@@ -184,7 +184,7 @@ class MilestoneResource(BaseResource):
         """Delete a milestone (soft delete)."""
         try:
             validate_uuid(milestone_id, "milestone_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             milestone = self._get_milestone(milestone_id, company_id)
             if not milestone:
@@ -206,7 +206,7 @@ class MilestoneResource(BaseResource):
         """Internal method to update a milestone."""
         try:
             validate_uuid(milestone_id, "milestone_id")
-            company_id = str(uuid.UUID(g.company_id))
+            company_id = g.company_id
 
             milestone = self._get_milestone(milestone_id, company_id)
             if not milestone:

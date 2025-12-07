@@ -6,7 +6,6 @@ This script adds a copyright and license notice to all .py files in the project
 that don't already have one.
 """
 
-import os
 import sys
 from pathlib import Path
 
