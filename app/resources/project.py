@@ -133,7 +133,7 @@ class ProjectListResource(BaseResource):
                 "description": project.description,
                 "status": project.status,
                 "company_id": str(project.company_id),
-                "customer_id": project.customer_id,
+                "customer_id": str(project.customer_id) if project.customer_id else None,
                 "created_by": project.created_by,
                 "consultation_date": (
                     project.consultation_date.isoformat()
