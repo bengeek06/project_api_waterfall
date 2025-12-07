@@ -47,6 +47,7 @@ class DeliverableListResource(BaseResource):
     """Resource for listing and creating deliverables within a project."""
 
     @require_jwt_auth()
+    @check_access_required("LIST")
     def get(self, project_id):
         """List all deliverables for a specific project."""
         try:
@@ -79,7 +80,7 @@ class DeliverableListResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self, project_id):
         """Create a new deliverable for a project."""
         try:
@@ -146,6 +147,7 @@ class DeliverableResource(BaseResource):
     """Resource for individual deliverable operations."""
 
     @require_jwt_auth()
+    @check_access_required("READ")
     def get(self, deliverable_id):
         """Get a specific deliverable by ID."""
         try:
@@ -165,19 +167,19 @@ class DeliverableResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def put(self, deliverable_id):
         """Update a deliverable (full replacement)."""
         return self._update_deliverable(deliverable_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def patch(self, deliverable_id):
         """Partially update a deliverable."""
         return self._update_deliverable(deliverable_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, deliverable_id):
         """Delete a deliverable (soft delete)."""
         try:

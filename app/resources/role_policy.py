@@ -41,7 +41,7 @@ class RolePolicyListResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("list")
+    @check_access_required("LIST")
     def get(self, project_id, role_id):
         """
         Get all policies associated with a specific role.
@@ -73,7 +73,7 @@ class RolePolicyListResource(Resource):
         return policy_schema.dump(policies), 200
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self, project_id, role_id):
         """
         Add a policy to a role.
@@ -137,7 +137,7 @@ class RolePolicyResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, project_id, role_id, policy_id):
         """
         Remove a policy from a role.

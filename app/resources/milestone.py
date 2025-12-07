@@ -47,6 +47,7 @@ class MilestoneListResource(BaseResource):
     """Resource for listing and creating milestones within a project."""
 
     @require_jwt_auth()
+    @check_access_required("LIST")
     def get(self, project_id):
         """List all milestones for a specific project."""
         try:
@@ -79,7 +80,7 @@ class MilestoneListResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self, project_id):
         """Create a new milestone for a project."""
         try:
@@ -146,7 +147,7 @@ class MilestoneResource(BaseResource):
     """Resource for individual milestone operations."""
 
     @require_jwt_auth()
-    @check_access_required("read")
+    @check_access_required("READ")
     def get(self, milestone_id):
         """Get milestone details."""
         try:
@@ -166,19 +167,19 @@ class MilestoneResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def put(self, milestone_id):
         """Fully update a milestone."""
         return self._update(milestone_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def patch(self, milestone_id):
         """Partially update a milestone."""
         return self._update(milestone_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, milestone_id):
         """Delete a milestone (soft delete)."""
         try:

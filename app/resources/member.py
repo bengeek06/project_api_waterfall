@@ -51,6 +51,7 @@ class MemberListResource(Resource):
     """
 
     @require_jwt_auth()
+    @check_access_required("LIST")
     def get(self, project_id):
         """
         List all members of a project.
@@ -78,7 +79,7 @@ class MemberListResource(Resource):
         return schema.dump(members), 200
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self, project_id):
         """
         Add a new member to the project.
@@ -175,6 +176,7 @@ class MemberResource(Resource):
     """
 
     @require_jwt_auth()
+    @check_access_required("READ")
     def get(self, project_id, user_id):
         """
         Get a specific project member.
@@ -193,7 +195,7 @@ class MemberResource(Resource):
         return schema.dump(member), 200
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def put(self, project_id, user_id):
         """
         Update a project member (full replacement).
@@ -211,7 +213,7 @@ class MemberResource(Resource):
         return self._update_member(project_id, user_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def patch(self, project_id, user_id):
         """
         Update a project member (partial update).
@@ -229,7 +231,7 @@ class MemberResource(Resource):
         return self._update_member(project_id, user_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, project_id, user_id):
         """
         Remove a member from the project (soft delete).

@@ -47,6 +47,7 @@ class ProjectListResource(BaseResource):
     """Resource for listing and creating projects."""
 
     @require_jwt_auth()
+    @check_access_required("LIST")
     def get(self):
         """List all projects for the authenticated user's company."""
         try:
@@ -66,7 +67,7 @@ class ProjectListResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("create")
+    @check_access_required("CREATE")
     def post(self):
         """Create a new project."""
         try:
@@ -173,7 +174,7 @@ class ProjectResource(BaseResource):
     """Resource for individual project operations."""
 
     @require_jwt_auth()
-    @check_access_required("read")
+    @check_access_required("READ")
     def get(self, project_id):
         """Get project details."""
         try:
@@ -193,19 +194,19 @@ class ProjectResource(BaseResource):
             return self.handle_error(error)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def put(self, project_id):
         """Fully update a project."""
         return self._update(project_id, partial=False)
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("UPDATE")
     def patch(self, project_id):
         """Partially update a project."""
         return self._update(project_id, partial=True)
 
     @require_jwt_auth()
-    @check_access_required("delete")
+    @check_access_required("DELETE")
     def delete(self, project_id):
         """Delete a project (soft delete)."""
         try:

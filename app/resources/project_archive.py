@@ -30,7 +30,7 @@ class ProjectArchiveResource(Resource):
     """
 
     @require_jwt_auth()
-    @check_access_required("update")
+    @check_access_required("CREATE")
     def post(self, project_id):
         """
         Archive a completed project.
