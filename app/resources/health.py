@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 health.py
 ---------
@@ -7,12 +15,15 @@ This module provides a simple health check endpoint to verify that the service i
 
 import os
 from datetime import datetime, timezone
+
 from flask_restful import Resource
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+
 from app.logger import logger
 from app.models.db import db
 from app.resources.version import API_VERSION
+from app.service import SERVICE_NAME
 
 
 class HealthResource(Resource):
@@ -41,7 +52,7 @@ class HealthResource(Resource):
         # Basic service info
         health_data = {
             "status": "healthy",
-            "service": "project_service",
+            "service": SERVICE_NAME + "_service",
             "timestamp": datetime.now(timezone.utc)
             .isoformat()
             .replace("+00:00", "Z"),

@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 tests.unit.test_policy_permission
 ----------------------------------
@@ -12,8 +20,10 @@ Tests cover:
 - Authorization (401 on missing JWT)
 """
 
-import pytest
 import uuid
+
+import pytest
+
 from tests.conftest import create_jwt_token
 
 

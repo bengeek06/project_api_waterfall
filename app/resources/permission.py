@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 app.resources.permission
 -------------------------
@@ -31,10 +39,11 @@ Resources:
 
 from flask import g
 from flask_restful import Resource
+
 from app.models.db import db
-from app.models.project import ProjectPermission, Project
+from app.models.project import Project, ProjectPermission
 from app.schemas.project_schema import ProjectPermissionSchema
-from app.utils import require_jwt_auth, check_access_required
+from app.utils import check_access_required, require_jwt_auth
 
 
 class PermissionListResource(Resource):

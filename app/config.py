@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 config.py
 ---------
@@ -17,6 +25,7 @@ debug mode, and SQLAlchemy modification tracking.
 """
 
 import os
+
 from dotenv import load_dotenv
 
 # Load .env file ONLY if not running in Docker
@@ -54,6 +63,11 @@ class TestingConfig(Config):
 
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    JWT_SECRET = os.environ.get("JWT_SECRET")
+    GUARDIAN_SERVICE_URL = os.environ.get("GUARDIAN_SERVICE_URL")
+    USE_GUARDIAN_SERVICE = (
+        os.environ.get("USE_GUARDIAN_SERVICE", "True").lower() == "true"
+    )
     if not SQLALCHEMY_DATABASE_URI:
         raise ValueError("DATABASE_URL environment variable is not set.")
 

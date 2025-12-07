@@ -1,20 +1,28 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 WBS (Work Breakdown Structure) resource for Task Service integration.
 """
 
 from flask import g
 from flask_restful import Resource
+
+from app.logger import logger
 from app.models.db import db
 from app.models.project import (
-    Project,
-    Milestone,
     Deliverable,
+    Milestone,
+    Project,
     milestone_deliverable_association,
 )
-from app.schemas import MilestoneSchema, DeliverableSchema
-from app.utils.auth import require_jwt_auth, check_access_required
-from app.logger import logger
-
+from app.schemas import DeliverableSchema, MilestoneSchema
+from app.utils import check_access_required, require_jwt_auth
 
 milestone_schema = MilestoneSchema()
 deliverable_schema = DeliverableSchema()

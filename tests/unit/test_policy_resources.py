@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 tests.unit.test_policy_resources
 ---------------------------------
@@ -14,9 +22,11 @@ Tests cover:
 - Authorization (401 on missing JWT)
 """
 
-import pytest
 import uuid
 from datetime import datetime, timezone
+
+import pytest
+
 from tests.conftest import create_jwt_token
 
 
@@ -304,12 +314,12 @@ class TestPolicyResource:
 
     def test_delete_policy_in_use(self, auth_client, project, app):
         """Test DELETE /projects/{project_id}/policies/{policy_id} fails if policy is assigned to roles"""
+        from app.models.db import db
         from app.models.project import (
-            ProjectRole,
             ProjectPolicy,
+            ProjectRole,
             role_policy_association,
         )
-        from app.models.db import db
 
         # Create a policy
         policy_data = {"name": "Test Policy"}

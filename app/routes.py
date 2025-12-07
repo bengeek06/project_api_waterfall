@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 routes.py
 -----------
@@ -7,59 +15,46 @@ Routes for the Flask application.
 """
 
 from flask_restful import Api
+
 from app.logger import logger
-from app.resources.version import VersionResource
+from app.resources.access_control import (
+    CheckFileAccessBatchResource,
+    CheckFileAccessResource,
+    CheckProjectAccessBatchResource,
+    CheckProjectAccessResource,
+)
 from app.resources.config import ConfigResource
+from app.resources.deliverable import (
+    DeliverableListResource,
+    DeliverableResource,
+)
 from app.resources.health import HealthResource
+from app.resources.member import MemberListResource, MemberResource
+from app.resources.milestone import MilestoneListResource, MilestoneResource
+from app.resources.milestone_deliverable import (
+    MilestoneDeliverableListResource,
+    MilestoneDeliverableResource,
+)
+from app.resources.permission import PermissionListResource
+from app.resources.policy import PolicyListResource, PolicyResource
+from app.resources.policy_permission import (
+    PolicyPermissionListResource,
+    PolicyPermissionResource,
+)
 from app.resources.project import ProjectListResource, ProjectResource
-from app.resources.project_metadata import ProjectMetadataResource
 from app.resources.project_archive import (
     ProjectArchiveResource,
     ProjectRestoreResource,
 )
 from app.resources.project_history import ProjectHistoryResource
-from app.resources.wbs_structure import WBSStructureResource
-from app.resources.milestone import (
-    MilestoneListResource,
-    MilestoneResource,
-)
-from app.resources.deliverable import (
-    DeliverableListResource,
-    DeliverableResource,
-)
-from app.resources.member import (
-    MemberListResource,
-    MemberResource,
-)
-from app.resources.role import (
-    RoleListResource,
-    RoleResource,
-)
-from app.resources.policy import (
-    PolicyListResource,
-    PolicyResource,
-)
-from app.resources.permission import (
-    PermissionListResource,
-)
-from app.resources.milestone_deliverable import (
-    MilestoneDeliverableListResource,
-    MilestoneDeliverableResource,
-)
+from app.resources.project_metadata import ProjectMetadataResource
+from app.resources.role import RoleListResource, RoleResource
 from app.resources.role_policy import (
     RolePolicyListResource,
     RolePolicyResource,
 )
-from app.resources.policy_permission import (
-    PolicyPermissionListResource,
-    PolicyPermissionResource,
-)
-from app.resources.access_control import (
-    CheckFileAccessResource,
-    CheckProjectAccessResource,
-    CheckFileAccessBatchResource,
-    CheckProjectAccessBatchResource,
-)
+from app.resources.version import VersionResource
+from app.resources.wbs_structure import WBSStructureResource
 
 
 def register_routes(app):

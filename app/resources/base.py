@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 base.py
 -------
@@ -15,11 +23,13 @@ from app.utils.auth. User ID and Company ID are available in Flask's g object:
 """
 
 import uuid as uuid_module
+
 from flask_restful import Resource
 from marshmallow import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
-from app.models.db import db
+
 from app.logger import logger
+from app.models.db import db
 
 
 class BaseResource(Resource):
