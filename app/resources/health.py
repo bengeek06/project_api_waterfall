@@ -23,6 +23,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.logger import logger
 from app.models.db import db
 from app.resources.version import API_VERSION
+from app.service import SERVICE_NAME
 
 
 class HealthResource(Resource):
@@ -51,7 +52,7 @@ class HealthResource(Resource):
         # Basic service info
         health_data = {
             "status": "healthy",
-            "service": "project_service",
+            "service": SERVICE_NAME + "_service",
             "timestamp": datetime.now(timezone.utc)
             .isoformat()
             .replace("+00:00", "Z"),
