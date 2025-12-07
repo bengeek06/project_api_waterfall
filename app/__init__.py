@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 __init__.py
 -----------
@@ -20,15 +28,16 @@ Functions:
 import os
 import sys
 import traceback
-from sqlalchemy import inspect
-from flask import Flask, request, g, abort
-from flask_migrate import Migrate
-from flask_marshmallow import Marshmallow
+
+from flask import Flask, abort, g, request
 from flask_cors import CORS
+from flask_marshmallow import Marshmallow
+from flask_migrate import Migrate
+from sqlalchemy import inspect
 from werkzeug.exceptions import InternalServerError
 
-from app.models.db import db
 from app.logger import logger
+from app.models.db import db
 from app.routes import register_routes
 
 # Initialisation des extensions Flask

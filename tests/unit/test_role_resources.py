@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 test_role_resources.py
 -----------------------
@@ -5,7 +13,9 @@ Tests for Role CRUD resources.
 """
 
 import uuid
+
 import pytest
+
 from tests.conftest import create_jwt_token
 
 
@@ -192,8 +202,8 @@ class TestRoleResource:
     def test_update_default_role_forbidden(self, auth_client, project):
         """Test that default roles cannot be updated."""
         # Create a default role manually for testing
-        from app.models.project import ProjectRole
         from app.models.db import db
+        from app.models.project import ProjectRole
 
         default_role = ProjectRole(
             project_id=project,
@@ -241,8 +251,8 @@ class TestRoleResource:
     def test_delete_default_role_forbidden(self, auth_client, project):
         """Test that default roles cannot be deleted."""
         # Create a default role
-        from app.models.project import ProjectRole
         from app.models.db import db
+        from app.models.project import ProjectRole
 
         default_role = ProjectRole(
             project_id=project,
@@ -271,8 +281,8 @@ class TestRoleResource:
         role_id = create_response.json["id"]
 
         # Assign role to a member
-        from app.models.project import ProjectMember
         from app.models.db import db
+        from app.models.project import ProjectMember
 
         member = ProjectMember(
             project_id=project,

@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 deliverable.py
 --------------
@@ -14,18 +22,20 @@ Endpoints:
 
 import uuid
 from datetime import datetime, timezone
-from flask import request, g
+
+from flask import g, request
 from marshmallow import ValidationError
-from app.resources.base import BaseResource, error_response, validate_uuid
-from app.utils.auth import require_jwt_auth, check_access_required
+
+from app.logger import logger
 from app.models.db import db
-from app.models.project import Project, Deliverable
+from app.models.project import Deliverable, Project
+from app.resources.base import BaseResource, error_response, validate_uuid
 from app.schemas.project_schema import (
-    DeliverableSchema,
     DeliverableCreateSchema,
+    DeliverableSchema,
     DeliverableUpdateSchema,
 )
-from app.logger import logger
+from app.utils import check_access_required, require_jwt_auth
 
 # Constants
 ERROR_DELIVERABLE_NOT_FOUND = "Deliverable not found"

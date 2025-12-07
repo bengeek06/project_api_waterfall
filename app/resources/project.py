@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 project.py
 ----------
@@ -14,19 +22,21 @@ Endpoints:
 
 import uuid
 from datetime import datetime, timezone
-from flask import request, g
+
+from flask import g, request
 from marshmallow import ValidationError
-from app.resources.base import BaseResource, error_response, validate_uuid
-from app.resources.permission import seed_project_permissions
-from app.utils.auth import require_jwt_auth, check_access_required
+
+from app.logger import logger
 from app.models.db import db
 from app.models.project import Project, ProjectHistory
+from app.resources.base import BaseResource, error_response, validate_uuid
+from app.resources.permission import seed_project_permissions
 from app.schemas.project_schema import (
-    ProjectSchema,
     ProjectCreateSchema,
+    ProjectSchema,
     ProjectUpdateSchema,
 )
-from app.logger import logger
+from app.utils import check_access_required, require_jwt_auth
 
 # Constants
 ERROR_PROJECT_NOT_FOUND = "Project not found"

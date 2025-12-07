@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 test_member_resources.py
 -------------------------
@@ -5,7 +13,9 @@ Tests for Member CRUD resources.
 """
 
 import uuid
+
 import pytest
+
 from tests.conftest import create_jwt_token
 
 
@@ -32,8 +42,8 @@ def project_with_role(auth_client):
     project_id = response.json["id"]
 
     # Create a role for the project - use company_id from auth_client
-    from app.models.project import ProjectRole
     from app.models.db import db
+    from app.models.project import ProjectRole
 
     role = ProjectRole(
         project_id=project_id,
@@ -213,8 +223,8 @@ class TestMemberResource:
         )
 
         # Create a new role - use company_id from auth_client
-        from app.models.project import ProjectRole
         from app.models.db import db
+        from app.models.project import ProjectRole
 
         new_role = ProjectRole(
             project_id=project_id,
@@ -247,8 +257,8 @@ class TestMemberResource:
         )
 
         # Create a new role - use company_id from auth_client
-        from app.models.project import ProjectRole
         from app.models.db import db
+        from app.models.project import ProjectRole
 
         new_role = ProjectRole(
             project_id=project_id,

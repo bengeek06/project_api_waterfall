@@ -1,16 +1,25 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 Project archive and restore operations.
 """
 
 from datetime import datetime, timezone
+
 from flask import g
 from flask_restful import Resource
+
+from app.logger import logger
 from app.models.db import db
 from app.models.project import Project
 from app.schemas import ProjectSchema
-from app.utils.auth import require_jwt_auth, check_access_required
-from app.logger import logger
-
+from app.utils import check_access_required, require_jwt_auth
 
 project_schema = ProjectSchema()
 

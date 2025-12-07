@@ -6,3 +6,11 @@
 #
 # See LICENSE and LICENSE.md files in the root directory for full license text.
 # For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
+"""
+service.py
+---------
+
+This module configures service name used in /health endpoint.
+
+"""
+SERVICE_NAME = "project"

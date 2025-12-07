@@ -1,12 +1,21 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 Project history tracking resource.
 """
 
 from flask import g
 from flask_restful import Resource
-from app.models import Project, ProjectHistory
-from app.utils.auth import require_jwt_auth, check_access_required
+
 from app.logger import logger
+from app.models import Project, ProjectHistory
+from app.utils import check_access_required, require_jwt_auth
 
 
 class ProjectHistoryResource(Resource):

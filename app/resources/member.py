@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 app.resources.member
 --------------------
@@ -18,7 +26,8 @@ Security:
 """
 
 from datetime import datetime, timezone
-from flask import request, g
+
+from flask import g, request
 from flask_restful import Resource
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -30,10 +39,7 @@ from app.schemas.project_schema import (
     ProjectMemberSchema,
     ProjectMemberUpdateSchema,
 )
-from app.utils import (
-    require_jwt_auth,
-    check_access_required,
-)
+from app.utils import check_access_required, require_jwt_auth
 
 
 class MemberListResource(Resource):

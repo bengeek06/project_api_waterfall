@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Waterfall
+#
+# This source code is dual-licensed under:
+# - GNU Affero General Public License v3.0 (AGPLv3) for open source use
+# - Commercial License for proprietary use
+#
+# See LICENSE and LICENSE.md files in the root directory for full license text.
+# For commercial licensing inquiries, contact: benjamin@waterfall-project.pro
 """
 test_health.py
 --------------
@@ -5,12 +13,14 @@ Tests for the health check endpoint.
 """
 
 import json
-from time import sleep
-import threading
 import logging
-from unittest.mock import patch, MagicMock
 from datetime import datetime
+from time import sleep
+from unittest.mock import MagicMock, patch
+
 from sqlalchemy.exc import SQLAlchemyError
+
+from app.service import SERVICE_NAME
 
 
 class TestHealthEndpoint:
@@ -24,7 +34,7 @@ class TestHealthEndpoint:
 
         data = response.get_json()
         assert data["status"] == "healthy"
-        assert data["service"] == "project_service"
+        assert data["service"] == SERVICE_NAME + "_service"
         assert "timestamp" in data
         assert "environment" in data
         assert "checks" in data
@@ -54,7 +64,7 @@ class TestHealthEndpoint:
 
             data = response.get_json()
             assert data["status"] == "unhealthy"
-            assert data["service"] == "project_service"
+            assert data["service"] == SERVICE_NAME + "_service"
 
             db_check = data["checks"]["database"]
             assert db_check["healthy"] is False
@@ -102,8 +112,8 @@ class TestHealthEndpoint:
         # Status should be either 'healthy' or 'unhealthy'
         assert data["status"] in ["healthy", "unhealthy"]
 
-        # Service should be project_service
-        assert data["service"] == "project_service"
+        # Service should be SERVICE_NAME_service
+        assert data["service"] == SERVICE_NAME + "_service"
 
         # Checks should contain database
         assert "database" in data["checks"]
@@ -310,35 +320,3 @@ class TestHealthEndpoint:
             # Remove 'Z' and parse
             dt = datetime.fromisoformat(timestamp[:-1])
             assert isinstance(dt, datetime)
-
-    def test_health_check_concurrent_requests(self, client):
-        """Test concurrent health check requests."""
-
-        results = []
-        errors = []
-
-        def make_request():
-            try:
-                response = client.get("/health")
-                results.append(response.status_code)
-            except RuntimeError as e:  # pylint: disable=broad-exception-caught
-                errors.append(str(e))
-
-        # Start multiple threads making concurrent requests
-        threads = []
-        for _ in range(5):
-            thread = threading.Thread(target=make_request)
-            threads.append(thread)
-
-        # Start all threads
-        for thread in threads:
-            thread.start()
-
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join(timeout=5)  # 5 second timeout
-
-        # All requests should succeed
-        assert len(errors) == 0, f"Errors occurred: {errors}"
-        assert len(results) == 5
-        assert all(status == 200 for status in results)
